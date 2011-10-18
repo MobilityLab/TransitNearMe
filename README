@@ -66,7 +66,7 @@ Install GeoDjango requirements:
 	sudo make install
 	cd ..
 
-- Install PROJ.4 library
+- Install PROJ.4 library:
 
 	wget http://download.osgeo.org/proj/proj-4.7.0.tar.gz
 	wget http://download.osgeo.org/proj/proj-datumgrid-1.5.zip
@@ -79,7 +79,7 @@ Install GeoDjango requirements:
 	sudo make install
 	cd ..
 
-- Install GDAL library
+- Install GDAL library:
 
 	wget http://download.osgeo.org/gdal/gdal-1.8.1.tar.gz
 	tar xzf gdal-1.8.1.tar.gz
@@ -89,17 +89,28 @@ Install GeoDjango requirements:
 	sudo make install
 	cd ..
 
-- Refresh linker settings
+- Refresh linker settings:
 
 	sudo ldconfig
 
 Set up Django application:
 
-- Create the virtualenv
+- Create the virtualenv:
 
 	virtualenv --no-site-packages --distribute localtransit
 
-- Install requirements
+- Install requirements:
 
 	pip install Django psycopg2
 
+- Create Django application as normal:
+
+	python manage.py startapp ...
+	etc.
+
+- Add GTFS feed to the database using GTFSDB:
+
+	gtfsdb-load --database_url postgresql://geo:geo@localhost/geodjango --is_geospatial path_to_feed.zip
+
+	
+	

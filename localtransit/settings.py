@@ -116,6 +116,7 @@ INSTALLED_APPS = (
     'django.contrib.admin',
     'django.contrib.gis',
     'world',
+	'gtfs',
 )
 
 # A sample logging configuration. The only tangible logging
