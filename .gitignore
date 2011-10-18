@@ -1,0 +1,11 @@
+*.log
+*.pyc
+*.swp
+.Python
+bin
+build
+include
+lib
+local
+share
+src

@@ -1,0 +1,105 @@
+Setting up PostgreSQL/PostGIS:
+
+- Install database packages:
+	
+	sudo apt-get install postgresql postgresql-client postgresql-contrib
+	sudo apt-get install pgadmin3
+	sudo apt-get install postgresql-8.4-postgis
+
+- Set a password for the system user 'postgres':
+
+	sudo passwd postgres
+
+- Set a password for the PostgreSQL user 'postgres':
+
+	sudo -u postgres psql postgres 
+	\password postgres
+	\q
+
+- Modify PostgreSQL access policy to use md5:
+
+	su - postgres
+	vim /etc/postgresql/8.4/main/pg_hba.conf
+	Modify "local, all, all, ident" line to "local, all, all, md5"
+	exit
+	sudo service postgresql restart
+
+- Create a 'geo' user to work with the PostGIS database:
+
+	sudo -u postgres createuser -d -P geo
+
+- Create a spatial database template:
+
+	su - postgres
+	createdb -E UTF8 template_postgis
+	createlang -d template_postgis plpgsql
+	psql -d template_postgis -f /usr/share/postgresql/8.4/contrib/postgis-1.5/postgis.sql
+	psql -d template_postgis -f /usr/share/postgresql/8.4/contrib/postgis-1.5/spatial_ref_sys.sql	
+	exit
+
+- Assign permissions to the template:
+
+	su - postgres
+	psql -d template_postgis
+	ALTER TABLE geometry_columns OWNER TO geo;
+	ALTER TABLE spatial_ref_sys OWNER TO geo;
+	\q
+	exit
+
+- Create a spatial database named 'geodjango':
+
+	sudo -u postgres createdb -O geo -T template_postgis geodjango
+
+Install GeoDjango requirements:
+
+- Install Python and PostgreSQL C++ libraries:
+
+	sudo apt-get install python-dev libpq-dev
+
+- Install GEOS library:
+
+	wget http://download.osgeo.org/geos/geos-3.3.1.tar.bz2
+	tar xjf geos-3.3.1.tar.bz2
+	cd geos-3.3.1
+	./configure
+	make
+	sudo make install
+	cd ..
+
+- Install PROJ.4 library
+
+	wget http://download.osgeo.org/proj/proj-4.7.0.tar.gz
+	wget http://download.osgeo.org/proj/proj-datumgrid-1.5.zip
+	tar xzf proj-4.7.0.tar.gz
+	cd proj-4.7.0/nad
+	unzip ../../proj-datumgrid-1.5.zip
+	cd ..
+	./configure
+	make
+	sudo make install
+	cd ..
+
+- Install GDAL library
+
+	wget http://download.osgeo.org/gdal/gdal-1.8.1.tar.gz
+	tar xzf gdal-1.8.1.tar.gz
+	cd gdal-1.8.1
+	./configure
+	make
+	sudo make install
+	cd ..
+
+- Refresh linker settings
+
+	sudo ldconfig
+
+Set up Django application:
+
+- Create the virtualenv
+
+	virtualenv --no-site-packages --distribute localtransit
+
+- Install requirements
+
+	pip install Django psycopg2
+
