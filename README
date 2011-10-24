@@ -112,5 +112,6 @@ Set up Django application:
 
 	gtfsdb-load --database_url postgresql://geo:geo@localhost/geodjango --is_geospatial path_to_feed.zip
 
-	
-	
+Install GeoServer from OpenGeo:
+
+	http://suite.opengeo.org/docs/usermanual/installation/linux/geoserver-ubuntu.html	

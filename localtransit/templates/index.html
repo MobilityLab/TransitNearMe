@@ -1,0 +1,103 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta http-equiv="content-type" content="text/html; charset=UTF-8">
+<title>Transit Near Me</title>
+<link rel="stylesheet" type="text/css" href="http://localhost:8080/geoserver/openlayers/theme/default/style.css" />
+<style type="text/css">
+#map {
+	clear: both;
+	position: relative;
+	width: 800px;
+	height: 600px;
+	border: 1px solid black;
+}
+</style>
+<script src="http://openlayers.org/api/OpenLayers.js" type="text/javascript"></script>
+<!-- script src="http://localhost:8080/geoserver/openlayers/OpenLayers.js" type="text/javascript"></script-->
+<script type="text/javascript" src="http://proj4js.org/lib/proj4js-compressed.js"></script>
+<script defer="defer" type="text/javascript">
+function init() {	
+	Proj4js.defs["EPSG:2853"] = "+proj=lcc +lat_1=39.2 +lat_2=38.03333333333333 +lat_0=37.66666666666666 +lon_0=-78.5 +x_0=3500000 +y_0=2000000 +ellps=GRS80 +units=m +no_defs";
+
+	var bounds = new OpenLayers.Bounds(
+		-8622029.9675648, 4664334.7709728,
+        -8534674.89147154, 4750883.230972
+	);
+	var options = {
+		controls: [],
+		/* maxResolution: 0.001515625, 
+		maxResolution: "auto",*/
+		maxExtent: bounds,
+		maxResolution: 341.23076598929765,
+		projection: "EPSG:900913",
+		units: 'm'
+		/*new OpenLayers.Projection("EPSG:900913"),
+		displayProjection: new OpenLayers.Projection("EPSG:2853"),
+	*/
+	};
+	var map = new OpenLayers.Map('map', options);
+
+	tiled = new OpenLayers.Layer.WMS(
+		"DC Metro (tiled)", "http://localhost:8080/geoserver/wms",
+		{
+			LAYERS: 'dcmetro',
+			STYLES: '',
+			format: "image/png",
+			tiled: true,
+			tilesOrigin: bounds.left + ',' + bounds.bottom,
+			projection: new OpenLayers.Projection("EPSG:900913"),
+			transparent: true,
+		},
+		{
+			buffer: 0,
+			displayOutsideMaxExtent: true,
+			isBaseLayer: false
+		}
+	);
+
+	untiled = new OpenLayers.Layer.WMS(
+		"DC Metro (untiled)", "http://localhost:8080/geoserver/wms",
+		{
+			LAYERS: 'dcmetro',
+			STYLES: '',
+			format: "image/png",
+			projection: "EPSG:900913",
+		},
+		{ singleTile: true, ratio: 1, isBaseLayer: true }
+	);
+
+	arrayOSM = ["http://otile1.mqcdn.com/tiles/1.0.0/osm/${z}/${x}/${y}.png",
+		"http://otile2.mqcdn.com/tiles/1.0.0/osm/${z}/${x}/${y}.png",
+		"http://otile3.mqcdn.com/tiles/1.0.0/osm/${z}/${x}/${y}.png",
+		"http://otile4.mqcdn.com/tiles/1.0.0/osm/${z}/${x}/${y}.png"];
+	baseOSM = new OpenLayers.Layer.OSM("MapQuest-OSM Tiles", arrayOSM);
+
+    map.addLayers([baseOSM, tiled]);
+	map.addControl(new OpenLayers.Control.Navigation());
+    map.addControl(new OpenLayers.Control.PanZoomBar({
+        position: new OpenLayers.Pixel(2, 15)
+    }));
+    map.addControl(new OpenLayers.Control.MousePosition({
+		element: $('location'),
+		displayProjection: new OpenLayers.Projection("EPSG:4326"),
+	}));
+	
+	map.setCenter(new OpenLayers.LonLat(-77.059198, 38.8950905).transform(new OpenLayers.Projection("EPSG:4326"), map.getProjectionObject()), 14);
+
+	map.events.register('moveend', map, function(e) {
+		center = map.getCenter().transform(map.getProjectionObject(), new OpenLayers.Projection("EPSG:900913"));
+		var params = {
+			VIEWPARAMS: 'longitude:'+center.lon+';latitude:'+center.lat,
+		};
+		tiled.mergeNewParams(params);
+		OpenLayers.Event.stop(e);
+});
+}
+</script>
+</head>
+<body onload="init()">
+<div id="map"></div>
+<div id="location">location</div>
+</body>
+</html>
