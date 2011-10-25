@@ -1,0 +1,54 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta http-equiv="content-type" content="text/html; charset=UTF-8">
+<title>Nearby Transit</title>
+<link rel="stylesheet" href="{{ STATIC_URL }}leaflet.css" />
+<style type="text/css">
+html, body, #map { height: 100%; padding: 0; margin: 0; }
+</style>
+<!--[if lte IE 8]><link rel="stylesheet" href="{{ STATIC_URL }}leaflet.ie.css" /><![endif]-->
+</head>
+<body>
+<div id="map"></div>
+<script src="http://ajax.googleapis.com/ajax/libs/jquery/1.6.4/jquery.min.js"></script>
+<script src="{{ STATIC_URL }}leaflet.js"></script>
+<script type="text/javascript">
+$(function() {
+
+	var map = new L.Map('map');
+	var url = 'http://otile{s}.mqcdn.com/tiles/1.0.0/osm/{z}/{x}/{y}.png',
+    attrib = 'Map data &copy; 2011 OpenStreetMap contributors, Tiles Courtesy of <a href="http://www.mapquest.com/" target="_blank">MapQuest</a>',
+    mqosm = new L.TileLayer(
+		url,
+		{
+			subdomains: '1234', 
+			maxZoom: 18, 
+			attribution: attrib
+		}
+	);
+
+	var stops_layer = new L.GeoJSON()
+	map.addLayer(stops_layer);
+	
+	var rosslyn = new L.LatLng(38.89706, -77.07092);
+	map.setView(rosslyn, 15).addLayer(mqosm);
+
+	var geojson = new L.GeoJSON();
+	map.addLayer(geojson);
+	nearby = null;
+
+	map.on('click', function(e) {
+		var lat = e.latlng.lat, lon = e.latlng.lng;
+		var getNearby = $.getJSON('/api/nearby?lat='+lat+'&lon='+lon);
+		getNearby.success(function(data) {
+			var old_nearby = nearby;
+			nearby = L.GeoJSON.geometryToLayer(data);
+			geojson.addLayer(nearby);
+			if (old_nearby) { geojson.removeLayer(old_nearby); }
+		});
+	});
+});
+</script>
+</body>
+</html>
