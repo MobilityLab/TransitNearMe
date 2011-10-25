@@ -112,6 +112,22 @@ Set up Django application:
 
 	gtfsdb-load --database_url postgresql://geo:geo@localhost/geodjango --is_geospatial path_to_feed.zip
 
-Install GeoServer from OpenGeo:
+Installing GeoServer:
 
-	http://suite.opengeo.org/docs/usermanual/installation/linux/geoserver-ubuntu.html	
+- Add the OpenGeo APT repository to local list:
+
+    su -
+    wget -q0- http://apt.opengeo.org/gpg.key | apt-key add -
+    echo "deb http://apt.opengeo.org/ubuntu lucid main" >> /etc/apt/sources.list
+    apt-get update
+    exit
+
+- Install GeoServer from OpenGeo:
+
+    sudo apt-get install opengeo-geoserver
+    
+    (Note that this will install the Java JDK/JRE & Tomcat as needed)
+    (Which may include accepting the Java JRE license agreement)
+    (And the "Operating System Distributor License for Java" (DLJ), v1.1)
+
+- Access the local GeoServer at http://localhost:8080/geoserver.
