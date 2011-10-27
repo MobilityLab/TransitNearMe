@@ -13,7 +13,6 @@ def nearby(request):
 	cursor = connection.cursor()	
 	cursor.execute("SELECT ST_AsGeoJSON(ST_Collect(geom)) FROM stops WHERE ST_DWithin(ST_Transform(ST_GeomFromText('POINT(%s %s)', 4326), 32661), ST_Transform(geom, 32661), %s)", [float(lon), float(lat), float(distance_m)])
 	stops_geojson = cursor.fetchone()[0]
-	print stops_geojson
 	stops = GEOSGeometry(stops_geojson)
 	
 	cursor.execute("SELECT ST_AsGeoJSON(ST_Collect(geom)) FROM routes WHERE ST_DWithin(ST_Transform(ST_GeomFromText('POINT(%s %s)', 4326), 32661), ST_Transform(geom, 32661), %s)", [float(lon), float(lat), float(distance_m)])

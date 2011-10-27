@@ -24,11 +24,6 @@ MEDIA_ROOT = ''
 # Make sure to use a trailing slash.
 MEDIA_URL = ''
 
-# Absolute path to the directory static files should be collected to.
-# Don't put anything in this directory yourself; store your static files
-# in apps' "static/" subdirectories and in STATICFILES_DIRS.
-STATIC_ROOT = ''
-
 # URL prefix for static files.
 STATIC_URL = '/static/'
 
@@ -37,9 +32,7 @@ STATIC_URL = '/static/'
 ADMIN_MEDIA_PREFIX = '/static/admin/'
 
 # Additional locations of static files
-STATICFILES_DIRS = (
-	path(ROOT, 'static'),
-)
+STATICFILES_DIRS = ()
 
 # List of finder classes that know how to find static files in
 # various locations.
