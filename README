@@ -101,12 +101,9 @@ Set up Django application:
 
 - Install requirements:
 
-	pip install Django psycopg2
+	pip install -r requirements.txt
 
-- Create Django application as normal:
-
-	python manage.py startapp ...
-	etc.
+Importing GTFS to the database:
 
 - Add GTFS feed to the database using GTFSDB:
 
