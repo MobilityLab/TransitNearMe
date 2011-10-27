@@ -65,7 +65,7 @@ MIDDLEWARE_CLASSES = (
     'django.contrib.messages.middleware.MessageMiddleware',
 )
 
-ROOT_URLCONF = 'localtransit.urls'
+ROOT_URLCONF = 'commuting.urls'
 
 TEMPLATE_DIRS = (
 	path(ROOT, 'templates'),

@@ -97,11 +97,12 @@ Set up Django application:
 
 - Create the virtualenv:
 
-	virtualenv --no-site-packages --distribute localtransit
+	virtualenv --no-site-packages --distribute --python=python2.7 commuting
 
 - Install requirements:
 
-	pip install -r requirements.txt
+	pip install -E commuting pysqlite
+	pip install -E commuting -r deploy/requirements.txt
 
 Importing GTFS to the database:
 
