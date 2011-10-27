@@ -24,9 +24,9 @@ Setting up PostgreSQL/PostGIS:
 	exit
 	sudo service postgresql restart
 
-- Create a 'geo' user to work with the PostGIS database:
+- Create a DB user to work with the PostGIS database:
 
-	sudo -u postgres createuser -d -P geo
+	sudo -u postgres createuser -d -P dbuser
 
 - Create a spatial database template:
 
@@ -41,14 +41,14 @@ Setting up PostgreSQL/PostGIS:
 
 	su - postgres
 	psql -d template_postgis
-	ALTER TABLE geometry_columns OWNER TO geo;
-	ALTER TABLE spatial_ref_sys OWNER TO geo;
+	ALTER TABLE geometry_columns OWNER TO dbuser;
+	ALTER TABLE spatial_ref_sys OWNER TO dbuser;
 	\q
 	exit
 
-- Create a spatial database named 'geodjango':
+- Create a spatial database:
 
-	sudo -u postgres createdb -O geo -T template_postgis geodjango
+	sudo -u postgres createdb -O dbuser -T template_postgis dbname
 
 Install GeoDjango requirements:
 
@@ -107,7 +107,7 @@ Importing GTFS to the database:
 
 - Add GTFS feed to the database using GTFSDB:
 
-	gtfsdb-load --database_url postgresql://geo:geo@localhost/geodjango --is_geospatial path_to_feed.zip
+	gtfsdb-load --database_url postgresql://dbuser:dbpass@localhost/dbname --is_geospatial path_to_feed.zip
 
 Installing GeoServer:
 
