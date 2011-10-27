@@ -1,0 +1,26 @@
+# Copy to local_settings.py and modify as needed.
+
+DEBUG = True
+TEMPLATE_DEBUG = DEBUG
+
+SITE_ID = 1
+
+# Make this unique, and don't share it with anybody.
+# Generate one at http://www.miniwebtool.com/django-secret-key-generator/
+SECRET_KEY = ''
+
+# Database configuration.
+DATABASES = {
+	'default': {
+		'ENGINE': 'django.contrib.gis.db.backends.postgis',
+		'NAME': '',
+		'USER': '',
+		'PASSWORD': '',
+	}
+}
+
+# Site admins.
+ADMINS = (
+	# ('John Doe', 'john@example.com'),
+)
+MANAGERS = ADMINS
