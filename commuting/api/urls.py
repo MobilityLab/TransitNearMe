@@ -3,4 +3,5 @@ from api.views import *
 
 urlpatterns = patterns('api.views',
 	url(r'^nearby$', nearby, name='nearby'),
+	(r'^stops$', NearbyStopsView.as_view()),	
 )
