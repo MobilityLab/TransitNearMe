@@ -73,7 +73,6 @@ INSTALLED_APPS = (
     'django.contrib.staticfiles',
     'django.contrib.admin',
     'django.contrib.gis',
-    'world',
 	'gtfs',
 	'api',
 )
@@ -95,6 +94,9 @@ LOGGING = {
         },
     }
 }
+
+import djcelery
+djcelery.setup_loader()
 
 # Import local settings. This is required.
 from local_settings import *
