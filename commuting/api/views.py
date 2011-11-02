@@ -1,4 +1,4 @@
-import json
+import geojson
 
 from django.contrib.gis.geos import Point, GEOSGeometry, GeometryCollection
 from django.contrib.gis.measure import D
@@ -8,18 +8,12 @@ from django.views.generic import View
 
 from gtfs.models import Stop
 
-class JSONResponseMixin(object):
-	class JSONEncoder(json.JSONEncoder):
-		def default(self, obj):
-			if hasattr(obj, 'json'):
-				return obj.json
-			return super(json.JSONEncoder, self).default(self, obj)
-
+class GeoJSONResponseMixin(object):
 	def render_to_response(self, content):
-		return HttpResponse(json.dumps(content, cls=self.JSONEncoder), 
+		return HttpResponse(geojson.dumps(content),
 							content_type='application/json')
 
-class BaseAPIView(JSONResponseMixin, View):
+class BaseAPIView(GeoJSONResponseMixin, View):
 	params = ['lat', 'lon', 'radius_m']
 	required_params = params
 
@@ -46,7 +40,7 @@ class NearbyStopsView(BaseAPIView):
 	def get_api_result(self, *args, **kwargs):
 		stops = Stop.objects.filter(geom__distance_lte=(self.origin, 
 													   D(m=self.radius_m)))
-		return stops
+		return geojson.FeatureCollection([stop.feature for stop in stops])
 
 def nearby(request):
 	lat = request.GET.get('lat', None)

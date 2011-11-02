@@ -1,4 +1,5 @@
 from django.contrib.gis.db import models
+from geojson import Feature, Point, loads as geojson_loads
 from stringfield import StringField
 
 class Stop(models.Model):
@@ -21,4 +22,9 @@ class Stop(models.Model):
 
 	def __unicode__(self):
 		return self.stop_name
-
+	
+	@property
+	def feature(self):
+		return Feature(geometry=Point(coordinates=[self.geom.x, self.geom.y]),
+					   properties={'stop_name': self.stop_name}, 
+					   id=self.stop_id)

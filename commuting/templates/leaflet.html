@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
 <meta http-equiv="content-type" content="text/html; charset=UTF-8">
-<title>Nearby Transit</title>
+<title>Transit Near Me - Mobility Lab</title>
 <link rel="stylesheet" href="{{ STATIC_URL }}leaflet.css" />
 <style type="text/css">
 html, body, #map { height: 100%; padding: 0; margin: 0; }
@@ -15,7 +15,6 @@ html, body, #map { height: 100%; padding: 0; margin: 0; }
 <script src="{{ STATIC_URL }}leaflet.js"></script>
 <script type="text/javascript">
 $(function() {
-
 	var map = new L.Map('map');
 	var url = 'http://otile{s}.mqcdn.com/tiles/1.0.0/osm/{z}/{x}/{y}.png',
     attrib = 'Map data &copy; 2011 OpenStreetMap contributors, Tiles Courtesy of <a href="http://www.mapquest.com/" target="_blank">MapQuest</a>',
@@ -35,19 +34,27 @@ $(function() {
 	map.setView(rosslyn, 15).addLayer(mqosm);
 
 	var geojson = new L.GeoJSON();
+	onFeatureParse = function(e) {
+		if (e.properties && e.properties.stop_name) {
+			e.layer.bindPopup(e.properties.stop_name);
+		}
+	};
+
 	map.addLayer(geojson);
 	nearby = null;
 
-	map.on('click', function(e) {
-		var lat = e.latlng.lat, lon = e.latlng.lng;
-		var getNearby = $.getJSON('/api/nearby?lat='+lat+'&lon='+lon);
+	function update(latlng) {
+		var getNearby = $.getJSON('/api/stops?lon='+latlng.lng+'&lat='+latlng.lat+'&radius_m=1000');
 		getNearby.success(function(data) {
 			var old_nearby = nearby;
-			nearby = L.GeoJSON.geometryToLayer(data);
+			nearby = L.GeoJSON.geoJSONToLayer(data, null, onFeatureParse);
 			geojson.addLayer(nearby);
 			if (old_nearby) { geojson.removeLayer(old_nearby); }
 		});
-	});
+	}
+
+	map.on('click', function(e) { update(e.latlng); });
+	update(map.getCenter());
 });
 </script>
 </body>
