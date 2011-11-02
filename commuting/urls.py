@@ -11,6 +11,6 @@ urlpatterns += patterns('',
 )
 
 urlpatterns += patterns('',
-	(r'^transitnearme/$', direct_to_template, {'template': 'leaflet.html'}), 
+	(r'^nearby/$', direct_to_template, {'template': 'leaflet.html'}), 
 	(r'^api/', include('api.urls')),
 )
