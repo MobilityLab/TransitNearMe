@@ -95,8 +95,5 @@ LOGGING = {
     }
 }
 
-import djcelery
-djcelery.setup_loader()
-
 # Import local settings. This is required.
 from local_settings import *
