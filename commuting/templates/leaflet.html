@@ -44,6 +44,7 @@ $(function() {
 	nearby = null;
 
 	function update(latlng) {
+		map.panTo(latlng);
 		var getNearby = $.getJSON('/api/stops?lon='+latlng.lng+'&lat='+latlng.lat+'&radius_m=1000');
 		getNearby.success(function(data) {
 			var old_nearby = nearby;
@@ -54,7 +55,10 @@ $(function() {
 	}
 
 	map.on('click', function(e) { update(e.latlng); });
+	map.on('locationfound', function(e) { update(e.latlng); });
 	update(map.getCenter());
+
+	map.locateAndSetView(15);
 });
 </script>
 </body>
