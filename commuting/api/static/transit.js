@@ -3,10 +3,10 @@
 })(this);
 
 // Common library functions.
-Transit.addMap = function(type, element, latlng) {
+Transit.addMap = function(type, element, options) {
 	switch(type)
 	{
-		case 'Leaflet': return new Transit._leafletMap(element, latlng);
+		case 'Leaflet': return new Transit._leafletMap(element, options);
 		default: throw 'Unknown map type.';
 	};
 };
@@ -45,8 +45,9 @@ Transit.API.getNearby = Transit.API._call(
 	'/api/stops?lng={lng}&lat={lat}&radius_m={radius_m}');
 
 // Leaflet Map wrapper.
-Transit._leafletMap = function(element, latlng) {
+Transit._leafletMap = function(element, options) {
 	var map = new L.Map(element),
+		latlng = new L.LatLng(options.lat, options.lng),
 		url = 'http://otile{s}.mqcdn.com/tiles/1.0.0/osm/{z}/{x}/{y}.png',
 		attrib = 'Map data &copy; 2011 OpenStreetMap contributors, tiles courtesy of <a href="http://www.mapquest.com/" target="_blank">MapQuest</a>',
 		mqosm = new L.TileLayer(
@@ -57,11 +58,19 @@ Transit._leafletMap = function(element, latlng) {
 				attribution: attrib,
 			}
 		);
-	map.setView(new L.LatLng(latlng.lat, latlng.lng), 15);
+	map.setView(latlng, 16);
 	map.addLayer(mqosm);
 	
 	this._map = map;
 	this._layers = { 'OSM': mqosm };
+
+	if (options.radius) {
+		this._layers['radius'] = new L.Circle(latlng, options.radius, { 
+			clickable: false,
+			weight: 1,
+			fillOpacity: 0.1, 
+		});
+	}
 };
 
 Transit._leafletMap.prototype.center = function(latlng) {
@@ -72,16 +81,19 @@ Transit._leafletMap.prototype.center = function(latlng) {
 Transit._leafletMap.prototype.addCallback = function(options) {
 	for (i in options.types) {
 		this._map.on(options.types[i], function(e) {
-			options.apiCall && options.apiCall(
-				$.extend(
+			if (options.apiCall) {
+				options.apiCall($.extend(
 					{}, 
-					options.extraParams, {
+					options.extraParams, 
+					{
 						'lng': e.latlng.lng,
 						'lat': e.latlng.lat,
-					}
-				),
-				options.callback
-			);
+					}),
+					options.callback
+				);
+			} else {
+				options.callback(e.latlng);
+			}
 		});
 	}
 };
@@ -91,10 +103,14 @@ Transit._leafletMap.prototype.overlay = function(overlay, overlayID) {
 		geoLayer = new L.GeoJSON();
 	
 	geoLayer.on('featureparse', function(e) {
+		if (e.layer.setIcon && e.properties && e.properties.stop_type) {
+			// e.layer.setIcon();
+		}
 		if (e.properties && e.properties.stop_name) {
 			e.layer.bindPopup(e.properties.stop_name);
 		}
 	});
+
 	geoLayer.addGeoJSON(overlay);
 
 	this._layers[overlayID] = geoLayer;
@@ -102,3 +118,12 @@ Transit._leafletMap.prototype.overlay = function(overlay, overlayID) {
 	oldLayer && this._map.removeLayer(oldLayer);
 }
 
+Transit._leafletMap.prototype.radius = function(latlng) {
+	var radius = this._layers['radius'];	
+	if (radius) {
+		radius.setLatLng(latlng);
+		if (!this._map.hasLayer(radius)) {
+			this._map.addLayer(radius);
+		}
+	}
+}

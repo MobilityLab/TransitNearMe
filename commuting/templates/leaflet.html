@@ -16,19 +16,27 @@ html, body, #map { height: 100%; padding: 0; margin: 0; }
 <script src="{{ STATIC_URL }}transit.js"></script>
 <script type="text/javascript">
 $(function() {
-	var map = Transit.addMap(
+	var radius = 500,
+		map = Transit.addMap(
 		'Leaflet', 
 		'map',
-		{ 'lat': 38.89706, 'lng': -77.07092 });
+		{ 'lat': 38.89706, 'lng': -77.07092, radius: radius });
 
 	map.addCallback({
 		types: ['click', 'center'],
 		apiCall: Transit.API.getNearby,
-		extraParams: { 'radius_m': 1000 },
+		extraParams: { 'radius_m': radius },
 		callback: function(data) {
 			map.overlay(data, 'nearby');
 		}
 	});	
+
+	map.addCallback({
+		types: ['click', 'center'],
+		callback: function(latlng) {
+			map.radius(latlng);
+		}
+	});
 
 	Transit.tryGeolocating(
 		function(latlng) { map.center(latlng); },
