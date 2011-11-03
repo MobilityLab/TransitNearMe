@@ -103,8 +103,17 @@ Transit._leafletMap.prototype.overlay = function(overlay, overlayID) {
 		geoLayer = new L.GeoJSON();
 	
 	geoLayer.on('featureparse', function(e) {
-		if (e.layer.setIcon && e.properties && e.properties.stop_type) {
-			// e.layer.setIcon();
+		if (e.layer.setIcon && e.properties && e.properties.route_type) {
+			var icon;
+			switch (e.properties.route_type) {
+				case 0: icon = '23_bus_inv_thumb.gif'; break;
+				case 1: icon = '25_railtransportation_inv_thumb.gif'; break;
+				case 2: icon = '25_railtransportation_inv_thumb.gif'; break;
+				case 3: icon = '23_bus_inv_thumb.gif'; break;
+				default: break;
+			}
+			icon && e.layer.setIcon(new Transit._leafletMap.TransitIcon(
+				'/static/images/' + icon));
 		}
 		if (e.properties && e.properties.stop_name) {
 			e.layer.bindPopup(e.properties.stop_name);
@@ -127,3 +136,10 @@ Transit._leafletMap.prototype.radius = function(latlng) {
 		}
 	}
 }
+
+Transit._leafletMap.TransitIcon = L.Icon.extend({
+	iconUrl: '',
+	iconSize: new L.Point(25, 25),
+	iconAnchor: new L.Point(13, 13),
+	popupAnchor: new L.Point(0, -7),
+});
