@@ -5,7 +5,7 @@ from django.contrib.gis.measure import D
 from django.http import Http404, HttpResponse, HttpResponseBadRequest
 from django.views.generic import View
 
-from gtfs.models import Stop
+from api.models import Stop
 
 class GeoJSONResponseMixin(object):
 	def render_to_response(self, content):
@@ -40,4 +40,3 @@ class NearbyStopsView(BaseAPIView):
 		stops = Stop.objects.filter(geom__distance_lte=(self.origin, 
 													   D(m=self.radius_m)))
 		return geojson.FeatureCollection([stop.feature for stop in stops])
-
