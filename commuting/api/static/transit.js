@@ -89,7 +89,9 @@ Transit._leafletMap.prototype.addCallback = function(options) {
 						'lng': e.latlng.lng,
 						'lat': e.latlng.lat,
 					}),
-					options.callback
+					function(data) {
+						options.callback(e.latlng, data);
+					}
 				);
 			} else {
 				options.callback(e.latlng);

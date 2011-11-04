@@ -26,18 +26,12 @@ $(function() {
 		types: ['click', 'center'],
 		apiCall: Transit.API.getNearby,
 		extraParams: { 'radius_m': radius },
-		callback: function(data) {
+		callback: function(latlng, data) {
+			map.radius(latlng);
 			map.overlay(data, 'nearby');
 		}
 	});	
-
-	map.addCallback({
-		types: ['click', 'center'],
-		callback: function(latlng) {
-			map.radius(latlng);
-		}
-	});
-
+	
 	Transit.tryGeolocating(
 		function(latlng) { map.center(latlng); },
 		function(error) { map.center(); });
