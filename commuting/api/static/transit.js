@@ -42,7 +42,7 @@ Transit.API = {
 };
 
 Transit.API.getNearby = Transit.API._call(
-	'/api/stops?lng={lng}&lat={lat}&radius_m={radius_m}');
+	'/api/nearby?lng={lng}&lat={lat}&radius_m={radius_m}');
 
 // Leaflet Map wrapper.
 Transit._leafletMap = function(element, options) {
@@ -119,6 +119,16 @@ Transit._leafletMap.prototype.overlay = function(overlay, overlayID) {
 		}
 		if (e.properties && e.properties.stop_name) {
 			e.layer.bindPopup(e.properties.stop_name);
+		}
+		else if (e.properties && e.properties.route_name) {
+			e.layer.bindPopup(e.properties.route_name);
+		}
+		if (e.properties && e.layer.setStyle) {
+			if (e.properties.color) {
+				e.layer.setStyle({'color': '#' + e.properties.color});
+			} else {
+				e.layer.setStyle({'color': '#333333'});
+			}
 		}
 	});
 
