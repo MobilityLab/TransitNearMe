@@ -21,4 +21,31 @@ class Stop(models.Model):
 
 	def __unicode__(self):
 		return self.stop_name
-	
+
+class RouteType(models.Model):
+	class Meta:
+		db_table = 'route_type'
+
+	route_type = models.IntegerField(primary_key=True)
+	route_type_name = StringField(null=True)
+	route_type_desc = StringField(null=True)
+
+class Route(models.Model):
+	class Meta:
+		db_table = 'routes'
+
+	route_id = StringField(primary_key=True)
+	agency_id = StringField(null=True)
+	route_short_name = StringField(null=True)
+	route_long_name = StringField(null=True)
+	route_type = models.ForeignKey(RouteType,
+								   db_column='route_type')
+	route_url = StringField(null=True)
+	route_color = StringField(null=True)
+	route_text_color = StringField(null=True)
+
+	geom = models.MultiLineStringField()
+	objects = models.GeoManager()
+
+	def __unicode__(self):
+		return self.route_short_name
