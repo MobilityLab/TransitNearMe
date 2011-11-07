@@ -1,47 +1,69 @@
 from django.contrib.gis.db import models
 from geojson import Feature, Point, LineString
 from stringfield import StringField
+from api.util import uniqify
+
+class Agency(models.Model):
+	agency_id = models.IntegerField(primary_key=True)
+	name = StringField()
+
+	def __unicode__(self):
+		return self.name
+
+class Route(models.Model):
+	agency = models.ForeignKey(Agency)
+	name = StringField()
+	type = models.IntegerField()
+	color = StringField(null=True)
+
+	def __unicode__(self):
+		return self.name
 
 class Stop(models.Model):
-	stop_id = models.IntegerField(primary_key=True)
-	stop_name = StringField()
-	route_type = models.IntegerField()
+	name = StringField()
 	
 	geom = models.PointField()
 	objects = models.GeoManager()
 
 	def __unicode__(self):
-		return self.stop_name
+		return self.name
+
+	@property
+	def routes(self):
+		return Route.objects.filter(routestop__stop=self)
 
 	@property
 	def feature(self):
 		return Feature(geometry=Point(coordinates=[self.geom.x, self.geom.y]),
-					   properties={'stop_name': self.stop_name,
-								   'route_type': self.route_type},
-					   id=self.stop_id)
+					   properties={'name': self.name,
+								   'route_names': uniqify([route.name for route in self.routes]),
+								   'route_types': uniqify([route.type for route in self.routes])},
+					   id=self.id)
 
 class Pattern(models.Model):
+	route = models.ForeignKey(Route)
 	geom = models.LineStringField(null=True)
 	objects = models.GeoManager()
-	color = StringField(null=True)
-	name = StringField(null=True)
 
 	@property
 	def feature(self):
 		return Feature(geometry=LineString(self.geom.coords),
 					   properties={'color': self.color,
-								   'route_name': self.name},
+								   'route_name': self.route.name},
 					   id=self.id)
+	
+	def __unicode__(self):
+		return '%s pattern %s' % (self.route.name, str(self.id))
 
 class PatternStop(models.Model):
 	class Meta:
 		unique_together = ('pattern', 'pattern_index')
 
 	pattern = models.ForeignKey(Pattern)
-	pattern_index = models.IntegerField()
 	stop = models.ForeignKey(Stop)
+	pattern_index = models.IntegerField()
 	is_first_stop = models.BooleanField(default=False)
 	is_last_stop = models.BooleanField(default=False)
 
 	def __unicode__(self):
-		return self.stop.stop_name
+		return '%s # %d: %s' % (self.pattern, self.pattern_index, self.stop)
