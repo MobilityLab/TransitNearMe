@@ -40,28 +40,32 @@ class NearbyStopsView(BaseAPIView):
 	def get_api_result(self, *args, **kwargs):
 		stops = Stop.objects.filter(geom__distance_lte=(self.origin, 
 													    D(m=self.radius_m)))
-		return geojson.FeatureCollection([stop.feature for stop in stops])
+		return geojson.FeatureCollection([stop.as_feature() for stop in stops])
 
 class NearbyView(BaseAPIView):
 	def get_api_result(self, *args, **kwargs):
-		# Find all patterns with a stop close to this points, grouped by route.
-		patterns = Pattern.objects.filter(patternstop__stop__geom__distance_lte=(self.origin,
-																				 D(m=self.radius_m)))
+		features = []
+
+		# Find all stops nearby.
+		stops = Stop.objects.filter(geom__distance_lte=(self.origin,
+														D(m=self.radius_m)))
+		ordered_stops = stops.distance(self.origin).order_by('distance')	
+		features.extend([stop.as_feature() for stop in ordered_stops])
+	
+		# Find all patterns that include one of these stops.
+		patterns = Pattern.objects.filter(patternstop__stop__in=stops).distinct()
 
 		# Find the closest stop on each pattern.
-		ordered_stops = Stop.objects.distance(self.origin).order_by('distance')
-		cut_patterns = []
-		for p in patterns:
-			closest_stop = ordered_stops.filter(patternstop__pattern=p)[0]
-			pattern_dist_pct = PatternStop.objects.filter(pattern=p, stop=closest_stop)[0].pattern_dist_pct
-			if pattern_dist_pct < 1:			
-				coord_index = int(len(p.geom.coords) * pattern_dist_pct) 
-				p.geom = LineString(p.geom.coords[coord_index:])
-				cut_patterns.append(p)
+		for pattern in patterns:
+			closest_stop = ordered_stops.filter(patternstop__pattern=pattern)[0]
+			closest_stop_on_pattern = PatternStop.objects.get(
+				pattern=pattern, 
+				stop=closest_stop)
+			
+			if closest_stop_on_pattern.is_last_stop:
+				continue
+			
+			geom_offset = closest_stop_on_pattern.pattern_dist_pct
+			features.append(pattern.as_feature(geom_offset=geom_offset))
 
-		stops = uniqify([ordered_stops.filter(patternstop__pattern=p)[0] for p in patterns])
-
-		features = []
-		features.extend([stop.feature for stop in stops])
-		features.extend([pattern.feature for pattern in cut_patterns])
 		return geojson.FeatureCollection(features)

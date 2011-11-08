@@ -32,8 +32,7 @@ class Stop(models.Model):
 	def routes(self):
 		return Route.objects.filter(pattern__patternstop__stop=self).distinct()
 
-	@property
-	def feature(self):
+	def as_feature(self):
 		routes = self.routes
 		return Feature(geometry=Point(coordinates=[self.geom.x, self.geom.y]),
 					   properties={'name': self.name,
@@ -50,9 +49,11 @@ class Pattern(models.Model):
 	def destination(self):
 		return PatternStop.objects.filter(pattern=self, is_last_stop=True)[0]
 
-	@property
-	def feature(self):
-		return Feature(geometry=LineString(self.geom.coords),
+	def as_feature(self, geom_offset=None):
+		coords = self.geom.coords
+		if geom_offset:
+			coords = coords[int(len(coords) * geom_offset):]
+		return Feature(geometry=LineString(coords),
 					   properties={'color': self.route.color,
 								   'name': self.route.name,
 								   'route_type': self.route.route_type,
