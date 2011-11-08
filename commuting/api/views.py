@@ -1,11 +1,11 @@
 import geojson
 
-from django.contrib.gis.geos import Point
+from django.contrib.gis.geos import Point, LineString
 from django.contrib.gis.measure import D
 from django.http import Http404, HttpResponse, HttpResponseBadRequest
 from django.views.generic import View
 
-from api.models import Stop, Route, Pattern
+from api.models import Stop, Route, Pattern, PatternStop
 from api.util import uniqify
 
 class GeoJSONResponseMixin(object):
@@ -50,9 +50,18 @@ class NearbyView(BaseAPIView):
 
 		# Find the closest stop on each pattern.
 		ordered_stops = Stop.objects.distance(self.origin).order_by('distance')
-		stops = [ordered_stops.filter(patternstop__pattern=p)[0] for p in patterns]
+		cut_patterns = []
+		for p in patterns:
+			closest_stop = ordered_stops.filter(patternstop__pattern=p)[0]
+			pattern_dist_pct = PatternStop.objects.filter(pattern=p, stop=closest_stop)[0].pattern_dist_pct
+			if pattern_dist_pct < 1:			
+				coord_index = int(len(p.geom.coords) * pattern_dist_pct) 
+				p.geom = LineString(p.geom.coords[coord_index:])
+				cut_patterns.append(p)
+
+		stops = uniqify([ordered_stops.filter(patternstop__pattern=p)[0] for p in patterns])
 
 		features = []
 		features.extend([stop.feature for stop in stops])
-		features.extend([pattern.feature for pattern in patterns])
+		features.extend([pattern.feature for pattern in cut_patterns])
 		return geojson.FeatureCollection(features)

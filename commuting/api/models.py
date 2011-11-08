@@ -54,7 +54,7 @@ class Pattern(models.Model):
 	def feature(self):
 		return Feature(geometry=LineString(self.geom.coords),
 					   properties={'color': self.route.color,
-								   'route_name': self.route.name,
+								   'name': self.route.name,
 								   'route_type': self.route.route_type,
 								   'destination': self.destination.stop.name},
 					   id=self.id)

@@ -117,11 +117,16 @@ Transit._leafletMap.prototype.overlay = function(overlay, overlayID) {
 			icon && e.layer.setIcon(new Transit._leafletMap.TransitIcon(
 				'/static/images/' + icon));
 		}
-		if (e.properties && e.properties.name && e.properties.route_names) {
-			e.layer.bindPopup(e.properties.name + ' (' + e.properties.route_names.join(', ') + ')');
-		}
-		else if (e.properties && e.properties.name) {
-			e.layer.bindPopup(e.properties.name);
+		if (e.properties && e.properties.name) {
+			if (e.properties.route_names) {
+				e.layer.bindPopup(e.properties.name + ' (' + e.properties.route_names.join(', ') + ')');
+			} else if (e.properties.name) {
+				if (e.properties.destination) {
+					e.layer.bindPopup(e.properties.name + ' to ' + e.properties.destination);
+				} else {
+					e.layer.bindPopup(e.properties.name);
+				}
+			}
 		}
 		if (e.properties && e.layer.setStyle) {
 			if (e.properties.color) {
