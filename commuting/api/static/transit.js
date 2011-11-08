@@ -105,9 +105,9 @@ Transit._leafletMap.prototype.overlay = function(overlay, overlayID) {
 		geoLayer = new L.GeoJSON();
 	
 	geoLayer.on('featureparse', function(e) {
-		if (e.layer.setIcon && e.properties && e.properties.route_type) {
+		if (e.layer.setIcon && e.properties && e.properties.route_types) {
 			var icon;
-			switch (e.properties.route_type) {
+			switch (e.properties.route_types[0]) {
 				case 0: icon = '23_bus_inv_thumb.gif'; break;
 				case 1: icon = '25_railtransportation_inv_thumb.gif'; break;
 				case 2: icon = '25_railtransportation_inv_thumb.gif'; break;
@@ -117,11 +117,11 @@ Transit._leafletMap.prototype.overlay = function(overlay, overlayID) {
 			icon && e.layer.setIcon(new Transit._leafletMap.TransitIcon(
 				'/static/images/' + icon));
 		}
-		if (e.properties && e.properties.stop_name) {
-			e.layer.bindPopup(e.properties.stop_name);
+		if (e.properties && e.properties.name && e.properties.route_names) {
+			e.layer.bindPopup(e.properties.name + ' (' + e.properties.route_names.join(', ') + ')');
 		}
-		else if (e.properties && e.properties.route_name) {
-			e.layer.bindPopup(e.properties.route_name);
+		else if (e.properties && e.properties.name) {
+			e.layer.bindPopup(e.properties.name);
 		}
 		if (e.properties && e.layer.setStyle) {
 			if (e.properties.color) {
@@ -151,6 +151,7 @@ Transit._leafletMap.prototype.radius = function(latlng) {
 
 Transit._leafletMap.TransitIcon = L.Icon.extend({
 	iconUrl: '',
+	shadowUrl: '',
 	iconSize: new L.Point(25, 25),
 	iconAnchor: new L.Point(13, 13),
 	popupAnchor: new L.Point(0, -7),

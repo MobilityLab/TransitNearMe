@@ -5,7 +5,8 @@ from django.contrib.gis.measure import D
 from django.http import Http404, HttpResponse, HttpResponseBadRequest
 from django.views.generic import View
 
-from api.models import Stop, Pattern
+from api.models import Stop, Route, Pattern
+from api.util import uniqify
 
 class GeoJSONResponseMixin(object):
 	def render_to_response(self, content):
@@ -41,18 +42,16 @@ class NearbyStopsView(BaseAPIView):
 													    D(m=self.radius_m)))
 		return geojson.FeatureCollection([stop.feature for stop in stops])
 
-class NearbyRoutesView(BaseAPIView):
-	def get_api_result(self, *args, **kwargs):
-		patterns = Pattern.objects.filter(geom__distance_lte=(self.origin,
-															D(m=self.radius_m)))
-		return geojson.FeatureCollection([pattern.feature for pattern in patterns])
-
 class NearbyView(BaseAPIView):
 	def get_api_result(self, *args, **kwargs):
-		stops = Stop.objects.filter(geom__distance_lte=(self.origin,
-													    D(m=self.radius_m)))
-		patterns = Pattern.objects.filter(patternstop__stop__in=stops)
-		
+		# Find all patterns with a stop close to this points, grouped by route.
+		patterns = Pattern.objects.filter(patternstop__stop__geom__distance_lte=(self.origin,
+																				 D(m=self.radius_m)))
+
+		# Find the closest stop on each pattern.
+		ordered_stops = Stop.objects.distance(self.origin).order_by('distance')
+		stops = [ordered_stops.filter(patternstop__pattern=p)[0] for p in patterns]
+
 		features = []
 		features.extend([stop.feature for stop in stops])
 		features.extend([pattern.feature for pattern in patterns])

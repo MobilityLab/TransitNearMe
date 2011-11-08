@@ -4,7 +4,6 @@ from stringfield import StringField
 from api.util import uniqify
 
 class Agency(models.Model):
-	agency_id = models.IntegerField(primary_key=True)
 	name = StringField()
 
 	def __unicode__(self):
@@ -13,8 +12,9 @@ class Agency(models.Model):
 class Route(models.Model):
 	agency = models.ForeignKey(Agency)
 	name = StringField()
-	type = models.IntegerField()
+	route_type = models.IntegerField()
 	color = StringField(null=True)
+	objects = models.GeoManager()
 
 	def __unicode__(self):
 		return self.name
@@ -30,14 +30,15 @@ class Stop(models.Model):
 
 	@property
 	def routes(self):
-		return Route.objects.filter(routestop__stop=self)
+		return Route.objects.filter(pattern__patternstop__stop=self).distinct()
 
 	@property
 	def feature(self):
+		routes = self.routes
 		return Feature(geometry=Point(coordinates=[self.geom.x, self.geom.y]),
 					   properties={'name': self.name,
-								   'route_names': uniqify([route.name for route in self.routes]),
-								   'route_types': uniqify([route.type for route in self.routes])},
+								   'route_names': uniqify([route.name for route in routes]),
+								   'route_types': uniqify([route.route_type for route in routes])},
 					   id=self.id)
 
 class Pattern(models.Model):
@@ -46,10 +47,16 @@ class Pattern(models.Model):
 	objects = models.GeoManager()
 
 	@property
+	def destination(self):
+		return PatternStop.objects.filter(pattern=self, is_last_stop=True)[0]
+
+	@property
 	def feature(self):
 		return Feature(geometry=LineString(self.geom.coords),
-					   properties={'color': self.color,
-								   'route_name': self.route.name},
+					   properties={'color': self.route.color,
+								   'route_name': self.route.name,
+								   'route_type': self.route.route_type,
+								   'destination': self.destination.stop.name},
 					   id=self.id)
 	
 	def __unicode__(self):
@@ -62,8 +69,11 @@ class PatternStop(models.Model):
 	pattern = models.ForeignKey(Pattern)
 	stop = models.ForeignKey(Stop)
 	pattern_index = models.IntegerField()
+	pattern_dist_pct = models.FloatField()
 	is_first_stop = models.BooleanField(default=False)
 	is_last_stop = models.BooleanField(default=False)
+	objects = models.GeoManager()
 
 	def __unicode__(self):
 		return '%s # %d: %s' % (self.pattern, self.pattern_index, self.stop)
+

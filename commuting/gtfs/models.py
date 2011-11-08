@@ -1,6 +1,20 @@
 from django.contrib.gis.db import models
 from stringfield import StringField
 
+class Agency(models.Model):
+	class Meta:
+		db_table = 'agency'
+	
+	id = models.IntegerField(primary_key=True)
+	agency_id = StringField(unique=True, null=True)
+	agency_name = StringField()
+	agency_url = StringField()
+	agency_timezone = StringField()
+	agency_lang = StringField(null=True)
+	agency_phone = StringField(null=True)
+	agency_fare_url = StringField(null=True)
+
+
 class Stop(models.Model):
 	class Meta:
 		db_table = 'stops'
@@ -30,6 +44,9 @@ class RouteType(models.Model):
 	route_type_name = StringField(null=True)
 	route_type_desc = StringField(null=True)
 
+	def __unicode__(self):
+		return self.route_type_name
+	
 class Route(models.Model):
 	class Meta:
 		db_table = 'routes'
