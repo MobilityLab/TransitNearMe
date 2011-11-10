@@ -37,3 +37,14 @@ class RailPrediction(models.Model):
 	minutes = StringField(null=True)
 	cars = StringField(null=True)
 
+	@property
+	def wait(self):
+		if 'BRD' == self.minutes:
+			return 0
+		if 'ARR' == self.minutes:
+			return 0.5
+		try:
+			return int(self.minutes)
+		except:
+			return None
+

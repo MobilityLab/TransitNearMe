@@ -1,0 +1,20 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta http-equiv="content-type" content="text/html; charset=UTF-8">
+<title>Metro Wait Times - Mobility Lab</title>
+</head>
+<body>
+{% for wait in waits %}
+<div>
+{{ wait.location_name }} | {{ wait.line }} | {{ wait.destinations }} | <span class="inlinesparkline">{{ wait.wait_times }}</span>
+</div>
+{% endfor %}
+<script src="http://ajax.googleapis.com/ajax/libs/jquery/1.6.4/jquery.min.js"></script>
+<script src="http://www.omnipotent.net/jquery.sparkline/1.6/jquery.sparkline.min.js"></script>
+<script type="text/javascript">
+$(function() {
+	$('.inlinesparkline').sparkline();
+});
+</script>
+</body>
