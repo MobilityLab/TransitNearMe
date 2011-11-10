@@ -7,14 +7,14 @@
 <body>
 {% for wait in waits %}
 <div>
-{{ wait.location_name }} | {{ wait.line }} | {{ wait.destinations }} | <span class="inlinesparkline">{{ wait.wait_times }}</span>
+<div style="width: 500px; float: left;">{{ wait.location_name }} | {{ wait.line }} | {{ wait.destinations }} |</div><div><span class="inlinesparkline">{{ wait.wait_times }}</span></div>
 </div>
 {% endfor %}
 <script src="http://ajax.googleapis.com/ajax/libs/jquery/1.6.4/jquery.min.js"></script>
 <script src="http://www.omnipotent.net/jquery.sparkline/1.6/jquery.sparkline.min.js"></script>
 <script type="text/javascript">
 $(function() {
-	$('.inlinesparkline').sparkline();
+	$('.inlinesparkline').sparkline('html', { width: '200px', spotColor: false, minSpotColor: false, maxSpotColor: false });
 });
 </script>
 </body>
