@@ -9,7 +9,7 @@ def waits(request, template_name):
 	recent_queries = Query.objects.exclude(railprediction__line__isnull=True).reverse()[:120]
 	recent_queries = [rq.id for rq in recent_queries]
 
-	lines = ['OR'] #'RD', 'OR', 'YL', 'GR', 'BL']
+	lines = ['OR', 'RD', 'YL', 'GR', 'BL']
 	good_predictions = RailPrediction.objects.filter(query__in=recent_queries, line__in=lines).order_by('location_name', 'group', 'line')
 
 	combinations = good_predictions.values('location_name', 'group', 'line').distinct()
@@ -25,7 +25,7 @@ def waits(request, template_name):
 		
 		if not predictions:
 			continue
-				
+	
 		destinations = predictions.values('destination_name').distinct()
 		destinations = [destination['destination_name'] for destination in destinations]
 
