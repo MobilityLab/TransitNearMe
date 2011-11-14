@@ -58,6 +58,9 @@ Transit._leafletMap = function(element, options) {
 				attribution: attrib,
 			}
 		);
+	map.doubleClickZoom.disable();
+	map.touchZoom.disable();
+	
 	map.setView(latlng, 16);
 	map.addLayer(mqosm);
 	

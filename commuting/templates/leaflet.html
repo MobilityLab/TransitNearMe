@@ -2,28 +2,40 @@
 <html lang="en">
 <head>
 <meta http-equiv="content-type" content="text/html; charset=UTF-8">
+<meta name="viewport" content="width=device-width, maximum-scale=1, initial-scale=1, user-scalable=no">
+<!--
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
+-->
 <title>Transit Near Me - Mobility Lab</title>
+<link rel="stylesheet" href="http://code.jquery.com/mobile/1.0rc2/jquery.mobile-1.0rc2.min.css">
 <link rel="stylesheet" href="{{ STATIC_URL }}leaflet.css" />
 <style type="text/css">
-html, body, #map { height: 100%; padding: 0; margin: 0; }
+html, body { height: 100%; width: 100%; padding: 0; margin: 0; }
+#home, #map-content, #map {
+	height: 100%; 
+	width: 100%;
+	padding: 0; 
+	margin: 0; 
+}
 </style>
 <!--[if lte IE 8]><link rel="stylesheet" href="{{ STATIC_URL }}leaflet.ie.css" /><![endif]-->
 </head>
-<body>
-<div id="map"></div>
-<script src="http://ajax.googleapis.com/ajax/libs/jquery/1.6.4/jquery.min.js"></script>
+<script src="http://code.jquery.com/jquery-1.6.4.min.js"></script>
+<script src="http://code.jquery.com/mobile/1.0rc2/jquery.mobile-1.0rc2.min.js"></script>
 <script src="{{ STATIC_URL }}leaflet.js"></script>
 <script src="{{ STATIC_URL }}transit.js"></script>
 <script type="text/javascript">
 $(function() {
-	var radius = 500,
+	var mapElementName = 'map',
+		radius = 500,
 		map = Transit.addMap(
-		'Leaflet', 
-		'map',
-		{ 'lat': 38.89706, 'lng': -77.07092, radius: radius });
+			'Leaflet', 
+			mapElementName,
+			{ 'lat': 38.89706, 'lng': -77.07092, radius: radius });
 
 	map.addCallback({
-		types: ['click', 'center'],
+		types: ['dblclick', 'center'],
 		apiCall: Transit.API.getNearby,
 		extraParams: { 'radius_m': radius },
 		callback: function(latlng, data) {
@@ -35,7 +47,59 @@ $(function() {
 	Transit.tryGeolocating(
 		function(latlng) { map.center(latlng); },
 		function(error) { map.center(); });
+
+	var fixgeometry = function() {
+		scroll(0, 0);
+		var header = $(".header:visible");
+		var content = $(".content:visible");
+		var viewport_height = $(window).innerHeight();
+
+		var content_height = viewport_height - header.outerHeight();
+		content_height -= (content.outerHeight() - content.height());
+		content.height(content_height);
+	};
+	$(window).bind("orientationchange resize pageshow", function() {
+		scroll(0, 0);
+		var viewport_height = $(window).innerHeight(),
+			header = $(".header:visible"),
+			content = $(".content:visible");
+		content.height(viewport_height - header.outerHeight() - content.outerHeight() + content.height());
+	});
 });
 </script>
+</head>
+
+<body>
+<div data-role="page" id="home" data-theme="a">
+
+	<div class="header" data-role="header">
+		<h1>Transit Near Me</h1>
+		<p>
+			<a href="#options" data-role="button" data-rel="dialog" data-transition="pop" data-icon="gear" class="ui-btn-right">Options</a>
+		</p>
+	</div>
+	<div class="content" data-role="content" id="map-content">
+		<div id="map"></div>
+	</div>
+</div>
+
+<div data-role="page" id="options">
+	<div data-role="header">
+		<h1>Options</h1>
+	</div>
+	<div data-role="content" data-theme="d">
+		<div data-role="fieldcontain">
+			<label for="location">Search location:</label>
+			<input type="text" name="location" id="location" value="" />
+		</div>
+		<div data-role="fieldcontain">
+			<label for="slider-0">Radius (km):</label>
+			<input type="number" name="slider-0" id="slider-0" value="1" min="0.1" max="10" />
+		</div>
+		<p><a href="#home" data-rel="back" data-role="button" data-inline="true" data-icon="back">Back</a>
+		</p>
+	</div>
+</div>
+
 </body>
 </html>
