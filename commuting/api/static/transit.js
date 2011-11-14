@@ -33,6 +33,9 @@ Transit.API = {
 		return function(params, callback) {
 			var url = urlTmpl, d;
 			for (i in params) {
+				if ($.isFunction(params[i])) {
+					params[i] = params[i]();
+				}
 				url = url.replace(RegExp('\\{'+i+'\\}', 'gi'), params[i]);
 			}
 			d = $.getJSON(url);
@@ -46,22 +49,19 @@ Transit.API.getNearby = Transit.API._call(
 
 // Leaflet Map wrapper.
 Transit._leafletMap = function(element, options) {
-	var map = new L.Map(element),
+	var map = new L.Map(element, { attributionControl: false }),
 		latlng = new L.LatLng(options.lat, options.lng),
 		url = 'http://otile{s}.mqcdn.com/tiles/1.0.0/osm/{z}/{x}/{y}.png',
-		attrib = 'Map data &copy; 2011 OpenStreetMap contributors, tiles courtesy of <a href="http://www.mapquest.com/" target="_blank">MapQuest</a>',
 		mqosm = new L.TileLayer(
 			url,
 			{
 				subdomains: '1234',
 				maxZoom: 18,
-				attribution: attrib,
 			}
 		);
 	map.doubleClickZoom.disable();
-	map.touchZoom.disable();
 	
-	map.setView(latlng, 16);
+	map.setView(latlng, 14);
 	map.addLayer(mqosm);
 	
 	this._map = map;
@@ -84,6 +84,10 @@ Transit._leafletMap.prototype.center = function(latlng) {
 Transit._leafletMap.prototype.addCallback = function(options) {
 	for (i in options.types) {
 		this._map.on(options.types[i], function(e) {
+			if (!e.latlng) {
+				e.latlng = e.target.getCenter();
+			}
+			options.before && options.before(e);
 			if (options.apiCall) {
 				options.apiCall($.extend(
 					{}, 
@@ -93,11 +97,11 @@ Transit._leafletMap.prototype.addCallback = function(options) {
 						'lat': e.latlng.lat,
 					}),
 					function(data) {
-						options.callback(e.latlng, data);
+						options.after && options.after(e, data);
 					}
 				);
 			} else {
-				options.callback(e.latlng);
+				options.after(e);
 			}
 		});
 	}
@@ -147,10 +151,11 @@ Transit._leafletMap.prototype.overlay = function(overlay, overlayID) {
 	oldLayer && this._map.removeLayer(oldLayer);
 }
 
-Transit._leafletMap.prototype.radius = function(latlng) {
+Transit._leafletMap.prototype.radius = function(latlng, radius_m) {
 	var radius = this._layers['radius'];	
 	if (radius) {
 		radius.setLatLng(latlng);
+		radius_m && radius.setRadius(radius_m);
 		if (!this._map.hasLayer(radius)) {
 			this._map.addLayer(radius);
 		}

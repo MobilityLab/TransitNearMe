@@ -12,12 +12,9 @@
 <link rel="stylesheet" href="{{ STATIC_URL }}leaflet.css" />
 <style type="text/css">
 html, body { height: 100%; width: 100%; padding: 0; margin: 0; }
-#home, #map-content, #map {
-	height: 100%; 
-	width: 100%;
-	padding: 0; 
-	margin: 0; 
-}
+.page, .content { padding: 0; margin: 0; height: 100%; }
+#map { padding: 0; margin: 0; height: 100%; width: 100%; }
+.ui-dialog .ui-header { margin-top: 15px; }
 </style>
 <!--[if lte IE 8]><link rel="stylesheet" href="{{ STATIC_URL }}leaflet.ie.css" /><![endif]-->
 </head>
@@ -28,49 +25,57 @@ html, body { height: 100%; width: 100%; padding: 0; margin: 0; }
 <script type="text/javascript">
 $(function() {
 	var mapElementName = 'map',
-		radius = 500,
+		getRadius = function()  { 
+			return $('input:radio[name=radius-button]:checked').val(); 
+		},
 		map = Transit.addMap(
 			'Leaflet', 
 			mapElementName,
-			{ 'lat': 38.89706, 'lng': -77.07092, radius: radius });
+			{ 
+				'lat': 38.89706, 
+				'lng': -77.07092, 
+				'radius': getRadius() });
 
 	map.addCallback({
 		types: ['dblclick', 'center'],
 		apiCall: Transit.API.getNearby,
-		extraParams: { 'radius_m': radius },
-		callback: function(latlng, data) {
-			map.radius(latlng);
+		extraParams: { 'radius_m': getRadius },
+		before: function(e) {
+			if (e.type != 'center') {
+				map.center(e.latlng);
+			}
+			map.radius(e.latlng, getRadius());
+			$.mobile.showPageLoadingMsg();
+		},
+		after: function(e, data) {
+			map.radius(e.latlng, getRadius());
 			map.overlay(data, 'nearby');
+			$(window).resize();
+			$.mobile.hidePageLoadingMsg();
 		}
 	});	
+	
+	$('#options').live('pagehide', function(e) {
+		map.center();
+	});
+
+	$(window).bind("orientationchange resize pageshow", function() {
+		scroll(0, 0);
+		var viewport_height = window.innerHeight,
+			header = $(".header:visible"),
+			content = $(".content:visible");
+		content.height(viewport_height - header.outerHeight());
+	});
 	
 	Transit.tryGeolocating(
 		function(latlng) { map.center(latlng); },
 		function(error) { map.center(); });
-
-	var fixgeometry = function() {
-		scroll(0, 0);
-		var header = $(".header:visible");
-		var content = $(".content:visible");
-		var viewport_height = $(window).innerHeight();
-
-		var content_height = viewport_height - header.outerHeight();
-		content_height -= (content.outerHeight() - content.height());
-		content.height(content_height);
-	};
-	$(window).bind("orientationchange resize pageshow", function() {
-		scroll(0, 0);
-		var viewport_height = $(window).innerHeight(),
-			header = $(".header:visible"),
-			content = $(".content:visible");
-		content.height(viewport_height - header.outerHeight() - content.outerHeight() + content.height());
-	});
 });
 </script>
 </head>
 
 <body>
-<div data-role="page" id="home" data-theme="a">
+<div class="page" data-role="page" id="home" data-theme="a">
 
 	<div class="header" data-role="header">
 		<h1>Transit Near Me</h1>
@@ -78,7 +83,7 @@ $(function() {
 			<a href="#options" data-role="button" data-rel="dialog" data-transition="pop" data-icon="gear" class="ui-btn-right">Options</a>
 		</p>
 	</div>
-	<div class="content" data-role="content" id="map-content">
+	<div class="content" data-role="content">
 		<div id="map"></div>
 	</div>
 </div>
@@ -89,12 +94,12 @@ $(function() {
 	</div>
 	<div data-role="content" data-theme="d">
 		<div data-role="fieldcontain">
-			<label for="location">Search location:</label>
-			<input type="text" name="location" id="location" value="" />
-		</div>
-		<div data-role="fieldcontain">
-			<label for="slider-0">Radius (km):</label>
-			<input type="number" name="slider-0" id="slider-0" value="1" min="0.1" max="10" />
+			<fieldset data-role="controlgroup">
+				<legend>Radius:</legend>
+					<input type="radio" name="radius-button" id="radius-half" value="804.5" checked="checked" /><label for="radius-half">1/2 mile</label>
+					<input type="radio" name="radius-button" id="radius-mile" value="1609" /><label for="radius-mile">1 mile</label>
+					<input type="radio" name="radius-button" id="radius-2miles" value="3218" /><label for="radius-2miles">2 miles</label>
+			</fieldset>
 		</div>
 		<p><a href="#home" data-rel="back" data-role="button" data-inline="true" data-icon="back">Back</a>
 		</p>
