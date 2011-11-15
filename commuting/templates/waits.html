@@ -14,7 +14,14 @@
 <script src="http://www.omnipotent.net/jquery.sparkline/1.6/jquery.sparkline.min.js"></script>
 <script type="text/javascript">
 $(function() {
-	$('.inlinesparkline').sparkline('html', { width: '200px', spotColor: false, minSpotColor: false, maxSpotColor: false });
+	$('.inlinesparkline').sparkline('html', { 
+		width: '200px', 
+		spotColor: false, 
+		minSpotColor: false, 
+		maxSpotColor: false,
+		chartRangeMin: 0, 
+		chartRangeMax: 20,
+	});
 });
 </script>
 </body>
