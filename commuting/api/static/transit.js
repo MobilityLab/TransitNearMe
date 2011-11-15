@@ -60,12 +60,21 @@ Transit._leafletMap = function(element, options) {
 			}
 		);
 	map.doubleClickZoom.disable();
+
+	map.on('preclick', function(e) {
+		if (this._removedLayers) {
+			for (rl in this._removedLayers) {
+				this.addLayer(this._removedLayers[rl]);
+			}
+		}
+	});
 	
 	map.setView(latlng, 15);
 	map.addLayer(mqosm);
 	
 	this._map = map;
 	this._layers = { 'OSM': mqosm };
+	this._geolayers = {};
 
 	if (options.radius) {
 		this._layers['radius'] = new L.Circle(latlng, options.radius, { 
@@ -109,7 +118,9 @@ Transit._leafletMap.prototype.addCallback = function(options) {
 
 Transit._leafletMap.prototype.overlay = function(overlay, overlayID) {
 	var oldLayer = this._layers[overlayID],
-		geoLayer = new L.GeoJSON();
+		geoLayer = new L.GeoJSON(),
+		stopLayers = [],
+		patternLayers = [];
 	
 	geoLayer.on('featureparse', function(e) {
 		if (e.layer.setIcon && e.properties && e.properties.route_types) {
@@ -142,6 +153,65 @@ Transit._leafletMap.prototype.overlay = function(overlay, overlayID) {
 				e.layer.setStyle({'color': '#333333'});
 			}
 		}
+
+		if (!e.layer.featureProperties) {
+			e.layer.featureProperties = {};
+		}
+		if (e.properties && e.properties.stops) {
+			e.layer.featureProperties.stops = e.properties.stops;
+			e.layer.featureProperties.pattern = e.properties.id;
+			patternLayers.push(e.properties.id);			
+		}
+		if (e.properties && e.properties.patterns) {
+			e.layer.featureProperties.patterns = e.properties.patterns;
+			e.layer.featureProperties.stop = e.properties.id;
+			stopLayers.push(e.properties.id);			
+		}
+		
+		e.layer.on('click', function(e) {
+			if (!this.featureProperties) {
+				return;
+			}
+			
+			this._map._removedLayers = [];
+	
+			if (this.featureProperties.stops) {
+				/* Remove all other patterns and stops not in this list. */
+				for (lid in this._map._layers) {
+					var layer = this._map._layers[lid];
+					if (!layer.featureProperties) {
+						continue;
+					}
+
+					if (layer.featureProperties.pattern && layer.featureProperties.pattern != this.featureProperties.pattern) {
+						this._map._removedLayers.push(layer);
+						this._map.removeLayer(layer);
+					}
+					if (layer.featureProperties.stop && -1 == $.inArray(layer.featureProperties.stop, this.featureProperties.stops)) {
+						this._map._removedLayers.push(layer);
+						this._map.removeLayer(layer);
+					}
+				}
+			}
+			if (this.featureProperties.patterns) {
+				/* Remove all other stops and patterns not in this list. */
+				for (lid in this._map._layers) {
+					var layer = this._map._layers[lid];
+					if (!layer.featureProperties) {
+						continue;
+					}
+
+					if (layer.featureProperties.stop && layer.featureProperties.stop != this.featureProperties.stop) {
+						this._map._removedLayers.push(layer);
+						this._map.removeLayer(layer);
+					}
+					if (layer.featureProperties.pattern && -1 == $.inArray(layer.featureProperties.pattern, this.featureProperties.patterns)) {
+						this._map._removedLayers.push(layer);
+						this._map.removeLayer(layer);
+					}
+				}
+			}
+		});
 	});
 
 	geoLayer.addGeoJSON(overlay);
@@ -149,6 +219,9 @@ Transit._leafletMap.prototype.overlay = function(overlay, overlayID) {
 	this._layers[overlayID] = geoLayer;
 	this._map.addLayer(geoLayer);
 	oldLayer && this._map.removeLayer(oldLayer);
+
+	this._stopLayers = stopLayers;
+	this._patternLayers = patternLayers;
 }
 
 Transit._leafletMap.prototype.radius = function(latlng, radius_m) {

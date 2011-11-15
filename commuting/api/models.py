@@ -35,7 +35,9 @@ class Stop(models.Model):
 	def as_feature(self):
 		routes = self.routes
 		return Feature(geometry=Point(coordinates=[self.geom.x, self.geom.y]),
-					   properties={'name': self.name,
+					   properties={'id': self.id,
+								   'name': self.name,
+								   'patterns': uniqify([p.id for p in Pattern.objects.filter(patternstop__stop=self)]),
 								   'route_names': uniqify([route.name for route in routes]),
 								   'route_types': uniqify([route.route_type for route in routes])},
 					   id=self.id)
@@ -54,10 +56,12 @@ class Pattern(models.Model):
 		if geom_offset:
 			coords = coords[int(len(coords) * geom_offset):]
 		return Feature(geometry=LineString(coords),
-					   properties={'color': self.route.color,
+					   properties={'id': self.id,
+								   'color': self.route.color,
 								   'name': self.route.name,
 								   'route_type': self.route.route_type,
-								   'destination': self.destination.stop.name},
+								   'destination': self.destination.stop.name,
+								   'stops': uniqify([s.id for s in Stop.objects.filter(patternstop__pattern=self)])},
 					   id=self.id)
 	
 	def __unicode__(self):
