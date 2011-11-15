@@ -39,7 +39,7 @@ def waits(request, template_name):
 				continue
 
 			min_wait = min(preds[rqid])
-			if min_wait:
+			if min_wait is not None:
 				wait_times.append(str(min_wait))
 			else:
 				wait_times.append('null')
