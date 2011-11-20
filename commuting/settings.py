@@ -73,10 +73,8 @@ INSTALLED_APPS = (
     'django.contrib.staticfiles',
     'django.contrib.admin',
     'django.contrib.gis',
-	'djcelery',
 	'gtfs',
 	'api',
-	'transitfeeds',
 )
 
 LOGGING = {
