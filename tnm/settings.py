@@ -16,6 +16,7 @@ USE_L10N = True
 # Useful variables.
 path = lambda root,*a: os.path.join(root, *a)
 ROOT = os.path.dirname(os.path.abspath(__file__))
+PROJECT_MODULE = os.path.split(ROOT)[1]
 
 # Absolute filesystem path to the directory that will hold user-uploaded files.
 MEDIA_ROOT = ''
@@ -58,7 +59,7 @@ MIDDLEWARE_CLASSES = (
     'django.contrib.messages.middleware.MessageMiddleware',
 )
 
-ROOT_URLCONF = 'commuting.urls'
+ROOT_URLCONF = PROJECT_MODULE + '.urls'
 
 TEMPLATE_DIRS = (
 	path(ROOT, 'templates'),
