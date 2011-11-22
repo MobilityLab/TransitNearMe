@@ -60,15 +60,6 @@ Transit._leafletMap = function(element, options) {
 			}
 		);
 	map.doubleClickZoom.disable();
-
-	map.on('preclick', function(e) {
-		if (this._removedLayers) {
-			for (rl in this._removedLayers) {
-				this.addLayer(this._removedLayers[rl]);
-			}
-		}
-	});
-	
 	map.setView(latlng, 15);
 	map.addLayer(mqosm);
 	
@@ -83,6 +74,41 @@ Transit._leafletMap = function(element, options) {
 			fillOpacity: 0.1, 
 		});
 	}
+
+	map.on('popupopen', function(e) {
+		if (!e.popup._source || !e.popup._source.featureProperties) {
+			return
+		}
+		
+		var props = e.popup._source.featureProperties;
+		this._hiddenLayers = [];
+		for (lid in this._layers)
+		{
+			var layer = this._layers[lid];
+
+			if (props.stops && layer.featureProperties) {
+				if ((layer.featureProperties.pattern && layer.featureProperties.pattern != props.pattern) ||
+					(layer.featureProperties.stop && -1 == $.inArray(layer.featureProperties.stop, props.stops))) {
+					this._hiddenLayers.push(layer);
+					this.removeLayer(layer);
+				}
+			}
+			if (props.patterns && layer.featureProperties) {
+				if ((layer.featureProperties.stop && layer.featureProperties.stop != props.stop) ||
+					(layer.featureProperties.pattern && -1 == $.inArray(layer.featureProperties.pattern, props.patterns))) {
+					this._hiddenLayers.push(layer);
+					this.removeLayer(layer);
+				}
+			}
+		}
+	});
+	map.on('popupclose', function(e) {
+		if (this._hiddenLayers) {
+			for (rl in this._hiddenLayers) {
+				this.addLayer(this._hiddenLayers[rl]);
+			}
+		}
+	});
 };
 
 Transit._leafletMap.prototype.center = function(latlng) {
@@ -167,51 +193,6 @@ Transit._leafletMap.prototype.overlay = function(overlay, overlayID) {
 			e.layer.featureProperties.stop = e.properties.id;
 			stopLayers.push(e.properties.id);			
 		}
-		
-		e.layer.on('click', function(e) {
-			if (!this.featureProperties) {
-				return;
-			}
-			
-			this._map._removedLayers = [];
-	
-			if (this.featureProperties.stops) {
-				/* Remove all other patterns and stops not in this list. */
-				for (lid in this._map._layers) {
-					var layer = this._map._layers[lid];
-					if (!layer.featureProperties) {
-						continue;
-					}
-
-					if (layer.featureProperties.pattern && layer.featureProperties.pattern != this.featureProperties.pattern) {
-						this._map._removedLayers.push(layer);
-						this._map.removeLayer(layer);
-					}
-					if (layer.featureProperties.stop && -1 == $.inArray(layer.featureProperties.stop, this.featureProperties.stops)) {
-						this._map._removedLayers.push(layer);
-						this._map.removeLayer(layer);
-					}
-				}
-			}
-			if (this.featureProperties.patterns) {
-				/* Remove all other stops and patterns not in this list. */
-				for (lid in this._map._layers) {
-					var layer = this._map._layers[lid];
-					if (!layer.featureProperties) {
-						continue;
-					}
-
-					if (layer.featureProperties.stop && layer.featureProperties.stop != this.featureProperties.stop) {
-						this._map._removedLayers.push(layer);
-						this._map.removeLayer(layer);
-					}
-					if (layer.featureProperties.pattern && -1 == $.inArray(layer.featureProperties.pattern, this.featureProperties.patterns)) {
-						this._map._removedLayers.push(layer);
-						this._map.removeLayer(layer);
-					}
-				}
-			}
-		});
 	});
 
 	geoLayer.addGeoJSON(overlay);
