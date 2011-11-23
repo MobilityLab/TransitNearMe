@@ -1,4 +1,6 @@
 import geojson
+import logging
+import time
 
 from django.contrib.gis.geos import Point, LineString
 from django.contrib.gis.measure import D
@@ -18,6 +20,8 @@ class BaseAPIView(GeoJSONResponseMixin, View):
 	required_params = params
 
 	def get(self, request, *args, **kwargs):
+		logger = logging.getLogger('api')
+	
 		# Parse query params.	
 		for param in self.params:
 			if param in request.GET:
@@ -31,7 +35,18 @@ class BaseAPIView(GeoJSONResponseMixin, View):
 			self.origin = Point(self.lng, self.lat)
 	
 		# Perform the API call.
+		start = time.time()	
 		api_result = self.get_api_result(*args, **kwargs)
+		duration = time.time() - start
+
+		logdata = { 
+			'call': request.path,
+			'params': request.META.get('QUERY_STRING', ''),
+			'duration': duration,
+			'ip': request.META.get('REMOTE_ADDR', ''),
+			'ua': request.META.get('HTTP_USER_AGENT', '')
+		}
+		logger.info('%(call)s "%(params)s" %(duration).2f "%(ip)s" "%(ua)s"' % logdata)
 		
 		# Return the result.
 		return self.render_to_response(api_result)

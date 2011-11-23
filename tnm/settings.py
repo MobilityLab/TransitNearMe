@@ -15,8 +15,9 @@ USE_L10N = True
 
 # Useful variables.
 path = lambda root,*a: os.path.join(root, *a)
-ROOT = os.path.dirname(os.path.abspath(__file__))
-PROJECT_MODULE = os.path.split(ROOT)[1]
+PROJECT_ROOT = os.path.dirname(os.path.abspath(__file__))
+PROJECT_MODULE = os.path.split(PROJECT_ROOT)[1]
+SITE_ROOT = os.path.dirname(PROJECT_ROOT)
 
 # Absolute filesystem path to the directory that will hold user-uploaded files.
 MEDIA_ROOT = ''
@@ -62,7 +63,7 @@ MIDDLEWARE_CLASSES = (
 ROOT_URLCONF = PROJECT_MODULE + '.urls'
 
 TEMPLATE_DIRS = (
-	path(ROOT, 'templates'),
+	path(PROJECT_ROOT, 'templates'),
 )
 
 INSTALLED_APPS = (
@@ -80,12 +81,23 @@ INSTALLED_APPS = (
 
 LOGGING = {
     'version': 1,
-    'disable_existing_loggers': False,
+    'disable_existing_loggers': True,
+	'formatters': {
+		'simple': {
+			'format': '%(levelname)s %(asctime)s %(message)s'
+		},
+	},
     'handlers': {
         'mail_admins': {
             'level': 'ERROR',
             'class': 'django.utils.log.AdminEmailHandler'
-        }
+        },
+		'api': {
+			'level': 'DEBUG',
+			'class': 'logging.FileHandler',
+			'formatter': 'simple',
+			'filename': path(SITE_ROOT, os.path.join('log', 'api.log'))
+		},
     },
     'loggers': {
         'django.request': {
@@ -93,7 +105,12 @@ LOGGING = {
             'level': 'ERROR',
             'propagate': True,
         },
-    }
+		'api': {
+			'handlers': ['api'],
+			'level': 'INFO',
+			'propagage': True,
+		}
+	}
 }
 
 # Import local settings. This is required.
