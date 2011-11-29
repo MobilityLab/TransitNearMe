@@ -1,3 +1,4 @@
+import gpolyencode
 import json
 import logging
 import time
@@ -17,6 +18,16 @@ class JSONResponseMixin(object):
 
     class JSONEncoder(json.JSONEncoder):
         def default(self, obj):
+            # Handle special classes.
+            if isinstance(obj, Point):
+                return {'lng': obj.x, 'lat': obj.y}
+            if isinstance(obj, LineString):
+                encoder = gpolyencode.GPolyEncoder()
+                return encoder.encode(obj.coords)    
+            if isinstance(obj, Distance):
+               return obj.m
+ 
+            # Try iterating.
             try:
                 iterable = iter(obj)
             except TypeError:
@@ -24,13 +35,6 @@ class JSONResponseMixin(object):
             else:
                 return list(obj)
 
-            if isinstance(obj, Point):
-                return dict([d, getattr(obj, d)] for d in ['x', 'y', 'srid'])
-            if isinstance(obj, LineString):
-                # TODO: replace with encoded polyline here.
-                return str(obj)
-            if isinstance(obj, Distance):
-                return obj.m
             return json.JSONEncoder.default(self, obj)
 
 class BaseAPIView(JSONResponseMixin, View):
@@ -108,20 +112,16 @@ class NearbyView(LocationAPIView):
             if not closest or service.distance < closest.distance:
                 closest_services[pair] = service
 
-        # Collect stops, destinations, routes, and services.
+        # Collect stops, routes, and services.
         stops = {}
-        destinations = {}  
         routes = {}
         for s in closest_services.values():
             if s.stop.id not in stops:
                 stops[s.stop.id] = s.stop.json_dict()
-            if s.destination.id not in destinations:
-                destinations[s.destination.id] = s.destination.json_dict()
             if s.route.id not in routes:
                 routes[s.route.id] = s.route.json_dict()
         services = [s.json_dict() for s in closest_services.values()]
 
         return {'stops': stops,
-                'destinations': destinations,
                 'routes': routes,
                 'services': services}

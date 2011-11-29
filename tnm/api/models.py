@@ -39,8 +39,7 @@ class Stop(GtfsModel):
         return self.name
 
     def json_dict(self):
-        return {'id': self.id,
-                'name': self.name,
+        return {'name': self.name,
                 'location': self.location,
                 'url': reverse('stop', args=[self.id])}
 
@@ -65,8 +64,7 @@ class Route(GtfsModel):
         return self.name
 
     def json_dict(self):
-        return {'id': self.id,
-                'agency': self.agency.name,
+        return {'agency': self.agency.name,
                 'short_name': self.short_name,
                 'long_name': self.long_name,
                 'route_type': self.route_type,
@@ -80,7 +78,7 @@ class RouteSegment(DatasetModel):
         return str(self.id)
 
 class ServiceFromStop(DatasetModel):
-    stop = models.ForeignKey(Stop, related_name='origin')
+    stop = models.ForeignKey(Stop, related_name='service')
     route = models.ForeignKey(Route)
     destination = models.ForeignKey(Stop)
     segments = models.ManyToManyField(RouteSegment)
@@ -92,6 +90,6 @@ class ServiceFromStop(DatasetModel):
     def json_dict(self):
         return {'stop': self.stop.id,
                 'route': self.route.id,
-                'destination': self.destination.id,
+                'destination': self.destination.name,
                 'segments': [s.line for s in self.segments.all()]}
 

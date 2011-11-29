@@ -142,12 +142,80 @@ Transit._leafletMap.prototype.addCallback = function(options) {
 	}
 };
 
+Transit._leafletMap.prototype.getIcon = function() {
+    var icons = [];
+    return function(routeTypes) {
+        if (1 != routeTypes.length) {
+            var routeType = -1; 
+        } else {
+            var routeType = routeTypes[0];
+        }
+
+        if (!icons[routeType]) {
+            switch (routeType) {
+                case 0: filename = '23_bus_inv_thumb.gif'; break;
+                case 1: filename = '25_railtransportation_inv_thumb.gif'; break;
+                case 2: filename = '25_railtransportation_inv_thumb.gif'; break;
+                case 3: filename = '23_bus_inv_thumb.gif'; break;
+                default: filename = 'marker.png'; break;
+            }
+            icons[routeType] = new Transit._leafletMap.TransitIcon('/static/images/' + filename);
+        }
+        return icons[routeType];
+    };
+}();
+
 Transit._leafletMap.prototype.overlay = function(overlay, overlayID) {
 	var oldLayer = this._layers[overlayID],
-		geoLayer = new L.GeoJSON(),
-		stopLayers = [],
-		patternLayers = [];
-	
+        services = overlay.services,
+        stops = overlay.stops,
+        routes = overlay.routes;
+
+    for (var i in services) {
+        var service = services[i],
+            stop = stops[service.stop],
+            route = routes[service.route];
+        
+        if (!stop.services) {
+            stop.services = [];
+        }
+        stop.services.push(service);
+
+        if (!stop.service_types) {
+            stop.service_types = [];
+        }
+        if (-1 == $.inArray(route.route_type, stop.service_types)) {
+            stop.service_types.push(route.route_type);
+        }
+
+        if (!stop.routes) {
+            stop.routes = [];
+        }
+        if (-1 == $.inArray(route, stop.routes)) {
+            stop.routes.push(route);
+        }
+    }
+    
+    for (var stop_id in stops) {
+        stop = stops[stop_id];
+        var icon = this.getIcon(stop.service_types);
+        stop_marker = new L.Marker(
+            stop.location, 
+            { icon: icon }
+        );
+
+        var popup_content = '<p>' + stop.name + '</p><ul>';
+        for (var i in stop.services) {
+            var service = stop.services[i]; 
+            popup_content += '<li>' + routes[service.route].short_name + ' to ' + service.destination + '</li>';
+        }
+        popup_content += '</ul>';
+        stop_marker.bindPopup(popup_content);
+        this._map.addLayer(stop_marker); 
+    }
+
+
+	/*
 	geoLayer.on('featureparse', function(e) {
 		if (e.layer.setIcon && e.properties && e.properties.route_types) {
 			var icon;
@@ -203,6 +271,7 @@ Transit._leafletMap.prototype.overlay = function(overlay, overlayID) {
 
 	this._stopLayers = stopLayers;
 	this._patternLayers = patternLayers;
+    */
 }
 
 Transit._leafletMap.prototype.radius = function(latlng, radius_m) {
