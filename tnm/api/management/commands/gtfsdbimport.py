@@ -113,8 +113,17 @@ class Command(BaseCommand):
                         route=api_route,
                         destination=destination)
                     
-                    # TODO: Cut the path at the origin stop.
+                    # Cut the path at the origin stop.
+                    cursor.execute("SELECT ST_Line_Substring(ST_GeomFromEWKT(%s), ST_Line_Locate_Point(ST_GeomFromEWKT(%s), ST_GeomFromEWKT(%s)), 1)", [trip_geom, trip_geom, stop.location.ewkt])
+                    trip_geom_subset = cursor.fetchone()[0]
+                    print trip_geom_subset
+                    print type(trip_geom_subset)
+
+                    segment, created = RouteSegment.objects.get_or_create(
+                        dataset=dataset,
+                        line=trip_geom_subset)
                     service.segments.add(segment)
-                    # Only required to refresh service JSON.
+             
+                   # Only required to refresh service JSON.
                     service.save()
               
