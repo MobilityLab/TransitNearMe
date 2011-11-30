@@ -1,9 +1,11 @@
+import json
+
 from django.contrib.gis.db import models
 from django.core.urlresolvers import reverse
 from geojson import Feature, Point, LineString
 from stringfield import StringField
 
-from api.util import uniqify
+from api.util import CustomJSONEncoder
 
 class Dataset(models.Model):
     name = StringField()
@@ -18,7 +20,24 @@ class DatasetModel(models.Model):
     class Meta:
         abstract = True
 
-class GtfsModel(DatasetModel):
+class JsonModel(DatasetModel):
+    _json = StringField(null=True)
+
+    class Meta:
+        abstract = True    
+
+    def json_dict(self):
+        pass
+
+    def save(self, *args, **kwargs):
+        try:
+            self._json = json.dumps(self.json_dict(),
+                                    cls=CustomJSONEncoder)
+        except:
+            self._json = None    
+        super(JsonModel, self).save(*args, **kwargs)
+
+class GtfsModel(JsonModel):
     gtfs_id = StringField(blank=True)
 
     class Meta:
@@ -40,8 +59,7 @@ class Stop(GtfsModel):
 
     def json_dict(self):
         return {'name': self.name,
-                'location': self.location,
-                'url': reverse('stop', args=[self.id])}
+                'location': self.location}
 
 class Route(GtfsModel):
     agency = models.ForeignKey(Agency)
@@ -77,7 +95,7 @@ class RouteSegment(DatasetModel):
     def __unicode__(self):
         return str(self.id)
 
-class ServiceFromStop(DatasetModel):
+class ServiceFromStop(JsonModel):
     stop = models.ForeignKey(Stop, related_name='service')
     route = models.ForeignKey(Route)
     destination = models.ForeignKey(Stop)

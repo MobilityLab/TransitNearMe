@@ -1,41 +1,19 @@
-import gpolyencode
 import json
 import logging
 import time
 
-from django.contrib.gis.geos import Point, LineString
-from django.contrib.gis.measure import D, Distance
-from django.core.serializers import serialize
+from django.contrib.gis.geos import Point
+from django.contrib.gis.measure import D
 from django.http import Http404, HttpResponse, HttpResponseBadRequest
 from django.views.generic import View
 
 from api.models import Stop, ServiceFromStop
+from api.util import CustomJSONEncoder
 
 class JSONResponseMixin(object):
     def render_to_response(self, content):
-        data = json.dumps(content, cls=JSONResponseMixin.JSONEncoder)
+        data = json.dumps(content, cls=CustomJSONEncoder)
         return HttpResponse(data, content_type='application/json')
-
-    class JSONEncoder(json.JSONEncoder):
-        def default(self, obj):
-            # Handle special classes.
-            if isinstance(obj, Point):
-                return {'lng': obj.x, 'lat': obj.y}
-            if isinstance(obj, LineString):
-                encoder = gpolyencode.GPolyEncoder()
-                return encoder.encode(obj.coords)    
-            if isinstance(obj, Distance):
-               return obj.m
- 
-            # Try iterating.
-            try:
-                iterable = iter(obj)
-            except TypeError:
-                pass
-            else:
-                return list(obj)
-
-            return json.JSONEncoder.default(self, obj)
 
 class BaseAPIView(JSONResponseMixin, View):
     params = []
@@ -117,10 +95,10 @@ class NearbyView(LocationAPIView):
         routes = {}
         for s in closest_services.values():
             if s.stop.id not in stops:
-                stops[s.stop.id] = s.stop.json_dict()
+                stops[s.stop.id] = json.loads(s.stop._json)
             if s.route.id not in routes:
-                routes[s.route.id] = s.route.json_dict()
-        services = [s.json_dict() for s in closest_services.values()]
+                routes[s.route.id] = json.loads(s.route._json)
+        services = [json.loads(s._json) for s in closest_services.values()]
 
         return {'stops': stops,
                 'routes': routes,

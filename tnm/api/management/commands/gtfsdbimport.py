@@ -1,7 +1,7 @@
 from optparse import make_option
-
 from django.db import connection
 from django.core.management.base import BaseCommand, CommandError
+
 from api.models import *
 
 def dictfetchall(cursor):
@@ -115,4 +115,6 @@ class Command(BaseCommand):
                     
                     # TODO: Cut the path at the origin stop.
                     service.segments.add(segment)
-               
+                    # Only required to refresh service JSON.
+                    service.save()
+              

@@ -37,20 +37,25 @@ $(function() {
 				'lng': -77.07092, 
 				'radius': getRadius() });
 
+    map.addCallback({
+        types: ['dblclick'],
+        before: function(e) {
+            map.center(e.latlng);
+        }
+    });
+
 	map.addCallback({
-		types: ['dblclick', 'center'],
+		types: ['center'],
 		apiCall: Transit.API.getNearby,
 		extraParams: { 'radius_m': getRadius },
 		before: function(e) {
-			if (e.type != 'center') {
-				map.center(e.latlng);
-			}
 			map.radius(e.latlng, getRadius());
+            map.overlay('nearby');
 			$.mobile.showPageLoadingMsg();
 		},
 		after: function(e, data) {
 			map.radius(e.latlng, getRadius());
-			map.overlay(data, 'nearby');
+			map.overlay('nearby', data);
 			$(window).resize();
 			$.mobile.hidePageLoadingMsg();
 		}

@@ -27,6 +27,71 @@ Transit.tryGeolocating = function(success, failure) {
 	}
 };
 
+Transit.getIcon = function() {
+    var icons = [];
+    return function(routeTypes) {
+        if (1 != routeTypes.length) {
+            var routeType = -1; 
+        } else {
+            var routeType = routeTypes[0];
+        }
+
+        if (!icons[routeType]) {
+            switch (routeType) {
+                case 0: filename = '23_bus_inv_thumb.gif'; break;
+                case 1: filename = '25_railtransportation_inv_thumb.gif'; break;
+                case 2: filename = '25_railtransportation_inv_thumb.gif'; break;
+                case 3: filename = '23_bus_inv_thumb.gif'; break;
+                default: filename = 'marker.png'; break;
+            }
+            icons[routeType] = new Transit._leafletMap.TransitIcon('/static/images/' + filename);
+        }
+        return icons[routeType];
+    };
+}();
+
+Transit.decodePolyline = function(polyline) {
+    var coords = [],
+        i = 0,    
+        lat = 0,
+        lng = 0;
+
+    while (i < polyline.length) {
+        var ch, 
+            num = 0;
+            shift = 0;
+        do {
+            ch = polyline.charCodeAt(i++) - 63;
+            num |= (ch & 0x1f) << shift;
+            shift += 5;
+        } while (ch >= 0x20);
+
+        if (num & 1 > 0) {
+            num = ~num;
+        }
+        num = num >> 1;
+        lat += num * 1e-5;
+    
+        shift = 0;
+        num = 0;
+        do {
+            ch = polyline.charCodeAt(i++) - 63;
+            num |= (ch & 0x1f) << shift;
+            shift += 5;
+        } while( ch >= 0x20);
+        
+        if (num & 1 > 0) {
+            num = ~num;
+        }
+        num = num >> 1;
+        lng += num * 1e-5;        
+        
+        coords.push(new L.LatLng(lat, lng))
+    }
+
+    return coords;
+}
+
 // API calls.
 Transit.API = {
 	_call: function(urlTmpl) {
@@ -76,30 +141,26 @@ Transit._leafletMap = function(element, options) {
 	}
 
 	map.on('popupopen', function(e) {
-		if (!e.popup._source || !e.popup._source.featureProperties) {
-			return
-		}
-		
-		var props = e.popup._source.featureProperties;
-		this._hiddenLayers = [];
+		var src = e.popup._source;
+        this._hiddenLayers = [];
 		for (lid in this._layers)
 		{
 			var layer = this._layers[lid];
 
-			if (props.stops && layer.featureProperties) {
-				if ((layer.featureProperties.pattern && layer.featureProperties.pattern != props.pattern) ||
-					(layer.featureProperties.stop && -1 == $.inArray(layer.featureProperties.stop, props.stops))) {
-					this._hiddenLayers.push(layer);
-					this.removeLayer(layer);
-				}
-			}
-			if (props.patterns && layer.featureProperties) {
-				if ((layer.featureProperties.stop && layer.featureProperties.stop != props.stop) ||
-					(layer.featureProperties.pattern && -1 == $.inArray(layer.featureProperties.pattern, props.patterns))) {
-					this._hiddenLayers.push(layer);
-					this.removeLayer(layer);
-				}
-			}
+            if (src.stop) {
+                if ((layer.stop && src.stop != layer.stop) ||
+                    (layer.service && -1 == $.inArray(layer.service, src.stop.services))) {
+                    this._hiddenLayers.push(layer);
+                    this.removeLayer(layer);
+                }
+            }
+            if (src.service) {
+                if ((layer.service && src.service != layer.service) ||
+                    (layer.stop && -1 == $.inArray(src.service, layer.stop.services))) {
+                    this._hiddenLayers.push(layer);
+                    this.removeLayer(layer);
+                }
+            }
 		}
 	});
 	map.on('popupclose', function(e) {
@@ -136,41 +197,26 @@ Transit._leafletMap.prototype.addCallback = function(options) {
 					}
 				);
 			} else {
-				options.after(e);
+				options.after && options.after(e);
 			}
 		});
 	}
 };
 
-Transit._leafletMap.prototype.getIcon = function() {
-    var icons = [];
-    return function(routeTypes) {
-        if (1 != routeTypes.length) {
-            var routeType = -1; 
-        } else {
-            var routeType = routeTypes[0];
-        }
+Transit._leafletMap.prototype.overlay = function(overlayID, overlay) {
+	var oldLayer = this._layers[overlayID];
+    oldLayer && this._map.removeLayer(oldLayer);
+    delete this._layers[overlayID];
+   
+    if (!overlay) {
+        return;
+    }
 
-        if (!icons[routeType]) {
-            switch (routeType) {
-                case 0: filename = '23_bus_inv_thumb.gif'; break;
-                case 1: filename = '25_railtransportation_inv_thumb.gif'; break;
-                case 2: filename = '25_railtransportation_inv_thumb.gif'; break;
-                case 3: filename = '23_bus_inv_thumb.gif'; break;
-                default: filename = 'marker.png'; break;
-            }
-            icons[routeType] = new Transit._leafletMap.TransitIcon('/static/images/' + filename);
-        }
-        return icons[routeType];
-    };
-}();
-
-Transit._leafletMap.prototype.overlay = function(overlay, overlayID) {
-	var oldLayer = this._layers[overlayID],
+    var layerGroup = new L.LayerGroup(),
         services = overlay.services,
         stops = overlay.stops,
         routes = overlay.routes;
-
+ 
     for (var i in services) {
         var service = services[i],
             stop = stops[service.stop],
@@ -198,80 +244,47 @@ Transit._leafletMap.prototype.overlay = function(overlay, overlayID) {
     
     for (var stop_id in stops) {
         stop = stops[stop_id];
-        var icon = this.getIcon(stop.service_types);
-        stop_marker = new L.Marker(
-            stop.location, 
-            { icon: icon }
-        );
+        var icon = Transit.getIcon(stop.service_types),
+            stop_marker = new L.Marker(stop.location, { icon: icon });
+        stop_marker.stop = stop;
 
         var popup_content = '<p>' + stop.name + '</p><ul>';
         for (var i in stop.services) {
             var service = stop.services[i]; 
-            popup_content += '<li>' + routes[service.route].short_name + ' to ' + service.destination + '</li>';
+            popup_content += '<li>' + routes[service.route].agency + ' ' + routes[service.route].short_name + ' to ' + service.destination + '</li>';
         }
         popup_content += '</ul>';
         stop_marker.bindPopup(popup_content);
-        this._map.addLayer(stop_marker); 
+        layerGroup.addLayer(stop_marker); 
     }
 
+    for (var stop_id in stops) {
+        stop = stops[stop_id];
+        for (var i in stop.services) {
+            var service = stop.services[i],
+                color = routes[service.route].color;
+            if (!color) {
+                color = '#333333';
+            }
+            for (var j in service.segments) {
+                var segment = service.segments[j],
+                    latlngs = Transit.decodePolyline(segment.points);
+                    service_line = new L.Polyline(latlngs, { color: color, opacity: 0.8 });
+                service_line.service = service;
 
-	/*
-	geoLayer.on('featureparse', function(e) {
-		if (e.layer.setIcon && e.properties && e.properties.route_types) {
-			var icon;
-			switch (e.properties.route_types[0]) {
-				case 0: icon = '23_bus_inv_thumb.gif'; break;
-				case 1: icon = '25_railtransportation_inv_thumb.gif'; break;
-				case 2: icon = '25_railtransportation_inv_thumb.gif'; break;
-				case 3: icon = '23_bus_inv_thumb.gif'; break;
-				default: break;
-			}
-			icon && e.layer.setIcon(new Transit._leafletMap.TransitIcon(
-				'/static/images/' + icon));
-		}
-		if (e.properties && e.properties.name) {
-			if (e.properties.route_names) {
-				e.layer.bindPopup(e.properties.name + ' (' + e.properties.route_names.join(', ') + ')');
-			} else if (e.properties.name) {
-				if (e.properties.destination) {
-					e.layer.bindPopup(e.properties.name + ' to ' + e.properties.destination);
-				} else {
-					e.layer.bindPopup(e.properties.name);
-				}
-			}
-		}
-		if (e.properties && e.layer.setStyle) {
-			if (e.properties.color) {
-				e.layer.setStyle({'color': '#' + e.properties.color});
-			} else {
-				e.layer.setStyle({'color': '#333333'});
-			}
-		}
+                var popup_content = routes[service.route].agency + ' ' + routes[service.route].short_name + ' to ' + service.destination;
+                service_line.bindPopup(popup_content);
+                layerGroup.addLayer(service_line);
+            }
+        }
+    }
 
-		if (!e.layer.featureProperties) {
-			e.layer.featureProperties = {};
-		}
-		if (e.properties && e.properties.stops) {
-			e.layer.featureProperties.stops = e.properties.stops;
-			e.layer.featureProperties.pattern = e.properties.id;
-			patternLayers.push(e.properties.id);			
-		}
-		if (e.properties && e.properties.patterns) {
-			e.layer.featureProperties.patterns = e.properties.patterns;
-			e.layer.featureProperties.stop = e.properties.id;
-			stopLayers.push(e.properties.id);			
-		}
-	});
-
-	geoLayer.addGeoJSON(overlay);
-
-	this._layers[overlayID] = geoLayer;
-	this._map.addLayer(geoLayer);
-	oldLayer && this._map.removeLayer(oldLayer);
-
-	this._stopLayers = stopLayers;
-	this._patternLayers = patternLayers;
-    */
+    oldLayer && this._map.removeLayer(oldLayer);
+    this._layers[overlayID] = layerGroup;
+    this._map.addLayer(layerGroup);
+    this._map._services = services;
+    this._map._stops = stops;
+    this._map._routes = routes;
 }
 
 Transit._leafletMap.prototype.radius = function(latlng, radius_m) {
