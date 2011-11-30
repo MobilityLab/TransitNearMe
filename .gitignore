@@ -1,6 +1,6 @@
-*.log
 *.pyc
 *.swp
+*.log
 .Python
 bin
 build
