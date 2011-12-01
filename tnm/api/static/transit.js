@@ -24,7 +24,9 @@ Transit.tryGeolocating = function(success, failure) {
 				failure && failure(error);
 			}
 		);
-	}
+	} else {
+        failure && failure();
+    }
 };
 
 Transit.getIcon = function() {
