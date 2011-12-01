@@ -176,7 +176,7 @@ Transit._leafletMap = function(element, options) {
 
 Transit._leafletMap.prototype.center = function(latlng) {
 	latlng && this._map.setView(latlng, this._map.getZoom());
-	this._map.fire('center', { latlng: this._map.getCenter() });
+	this._map.fire('center', { latlng: latlng });
 };
 
 Transit._leafletMap.prototype.addCallback = function(options) {
