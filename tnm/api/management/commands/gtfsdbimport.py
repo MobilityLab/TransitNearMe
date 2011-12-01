@@ -83,7 +83,7 @@ class Command(BaseCommand):
                 color=gtfs_route['route_color'])
 
             cursor.execute("SELECT array_agg(unique_patterns.trip_id), unique_patterns.stop_ids, unique_patterns.shape_dist_traveleds FROM (SELECT patterns.trip_id, array_agg(patterns.stop_id) AS stop_ids, array_agg(patterns.shape_dist_traveled) AS shape_dist_traveleds FROM (SELECT trips.trip_id, stops.stop_id, stop_times.stop_sequence, stop_times.shape_dist_traveled FROM stop_times JOIN stops ON stop_times.stop_id = stops.stop_id JOIN trips ON stop_times.trip_id = trips.trip_id WHERE trips.route_id = '%s' ORDER BY trips.trip_id, stop_times.stop_sequence) AS patterns GROUP BY patterns.trip_id) AS unique_patterns GROUP BY unique_patterns.stop_ids, unique_patterns.shape_dist_traveleds", [int(gtfs_route['route_id'])])
-                
+            
             # Iterate over each trip.
             for row in cursor.fetchall():
                 trip_ids, stop_ids, stop_dist_traveleds = row
@@ -103,6 +103,10 @@ class Command(BaseCommand):
  
                 # Iterate over each stop in the trip.
                 for stop_order, stop_id in enumerate(stop_ids):
+                    # Don't create a service from a stop to itself.
+                    if stop_order == len(stop_ids) - 1:
+                        continue
+
                     stop = Stop.objects.get(
                         gtfs_id=stop_id,
                         dataset=dataset)
@@ -112,17 +116,20 @@ class Command(BaseCommand):
                         stop=stop,
                         route=api_route,
                         destination=destination)
-                    
-                    # Cut the path at the origin stop.
-                    cursor.execute("SELECT ST_Line_Substring(ST_GeomFromEWKT(%s), ST_Line_Locate_Point(ST_GeomFromEWKT(%s), ST_GeomFromEWKT(%s)), 1)", [trip_geom, trip_geom, stop.location.ewkt])
-                    trip_geom_subset = cursor.fetchone()[0]
-                    print trip_geom_subset
-                    print type(trip_geom_subset)
+                   
+                    # Cut the path at the origin stop, unless the trip
+                    # starts and ends at the same stop.
+                    if (stop_order == 0) and (stop_ids[0] == stop_ids[-1]):
+                        segment_subset = segment
+                    else: 
+                        cursor.execute("SELECT ST_Line_Substring(ST_GeomFromEWKT(%s), ST_Line_Locate_Point(ST_GeomFromEWKT(%s), ST_GeomFromEWKT(%s)), 1)", [trip_geom, trip_geom, stop.location.ewkt])
+                        trip_geom_subset = cursor.fetchone()[0]
 
-                    segment, created = RouteSegment.objects.get_or_create(
-                        dataset=dataset,
-                        line=trip_geom_subset)
-                    service.segments.add(segment)
+                        segment_subset, created = RouteSegment.objects.get_or_create(
+                            dataset=dataset,
+                            line=trip_geom_subset)
+                    
+                    service.segments.add(segment_subset)
              
                    # Only required to refresh service JSON.
                     service.save()
