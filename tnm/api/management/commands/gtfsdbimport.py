@@ -87,7 +87,7 @@ class Command(BaseCommand):
             # Iterate over each trip.
             for row in cursor.fetchall():
                 trip_ids, stop_ids, stop_dist_traveleds = row
-               
+
                 # Find the destination for this trip. 
                 destination = Stop.objects.get(
                     gtfs_id=stop_ids[-1],
@@ -111,26 +111,29 @@ class Command(BaseCommand):
                         gtfs_id=stop_id,
                         dataset=dataset)
 
+                    try: 
+                        # Cut the path at the origin stop, unless the trip
+                        # starts and ends at the same stop.
+                        if (stop_order == 0) and (stop_ids[0] == stop_ids[-1]):
+                            segment_subset = segment
+                        else: 
+                            cursor.execute("SELECT ST_Line_Substring(ST_GeomFromEWKT(%s), ST_Line_Locate_Point(ST_GeomFromEWKT(%s), ST_GeomFromEWKT(%s)), 1)", [trip_geom, trip_geom, stop.location.ewkt])
+                            trip_geom_subset = cursor.fetchone()[0]
+
+                            segment_subset, created = RouteSegment.objects.get_or_create(
+                                dataset=dataset,
+                                line=trip_geom_subset)
+                    except TypeError:
+                        self.stderr.write("Couldn't create trip geometry subset for route %d, segment %d, stop %d." % (api_route.id, segment.id, stop_id))
+                        continue
+
                     service, created = ServiceFromStop.objects.get_or_create(
                         dataset=dataset,
                         stop=stop,
                         route=api_route,
                         destination=destination)
-                   
-                    # Cut the path at the origin stop, unless the trip
-                    # starts and ends at the same stop.
-                    if (stop_order == 0) and (stop_ids[0] == stop_ids[-1]):
-                        segment_subset = segment
-                    else: 
-                        cursor.execute("SELECT ST_Line_Substring(ST_GeomFromEWKT(%s), ST_Line_Locate_Point(ST_GeomFromEWKT(%s), ST_GeomFromEWKT(%s)), 1)", [trip_geom, trip_geom, stop.location.ewkt])
-                        trip_geom_subset = cursor.fetchone()[0]
 
-                        segment_subset, created = RouteSegment.objects.get_or_create(
-                            dataset=dataset,
-                            line=trip_geom_subset)
-                    
                     service.segments.add(segment_subset)
-             
-                   # Only required to refresh service JSON.
+                    # Only required to refresh service JSON.
                     service.save()
               
