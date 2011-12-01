@@ -19,10 +19,9 @@
 <div class="page" data-role="page" id="home" data-theme="a">
 
 	<div class="header" data-role="header">
+        <a href="#info" data-role="button" data-rel="dialog" data-transition="pop" data-icon="info" data-iconpos="notext">Info</a>
 		<h1>Transit Near Me</h1>
-		<p>
-			<a href="#options" data-role="button" data-rel="dialog" data-transition="pop" data-icon="gear" class="ui-btn-right">Options</a>
-		</p>
+		<a href="#options" data-role="button" data-rel="dialog" data-transition="pop" data-icon="gear" data-iconpos="notext">Options</a>
 	</div>
 	<div class="content" data-role="content">
 		<div id="map"></div>
@@ -48,5 +47,21 @@
 	</div>
 </div>
 
+<div data-role="page" id="info">
+    <div data-role="header">
+        <h1>About</h1>
+    </div>
+    <div data-role="content" data-theme="d">
+        <div>
+            <h2>Who made this?</h2>
+            <p>Transit Near Me was made by some cool folks.</p>
+            <h2>How do I use it?</h2>
+            <p>Click and stuff.</p>
+            <h2>How can I give you feedback?</h2>
+            <p>Send us feedback at <a href="mailto:contact@transitnearme.com?subject=Feedback from transitnearme.com">contact@transitnearme.com</a>.</p>
+        </div>
+        <p><a href="#home" data-rel="back" data-role="button" data-inline="true" data-icon="back">Back</a>
+    </div>
+</div>
 </body>
 </html>
