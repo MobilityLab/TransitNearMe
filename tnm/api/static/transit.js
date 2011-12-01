@@ -17,7 +17,7 @@ Transit.tryGeolocating = function(success, failure) {
 			function(pos) {
 				success && success({
 					'lat': pos.coords.latitude,
-					'lng': pos.coords.longitude,
+					'lng': pos.coords.longitude
 				});
 			},
 			function(error) {
@@ -106,7 +106,7 @@ Transit.API = {
 			d = $.getJSON(url);
 			callback && d.success(callback);
 		};
-	},
+	}
 };
 
 Transit.API.getNearby = Transit.API._call(
@@ -121,7 +121,7 @@ Transit._leafletMap = function(element, options) {
 			url,
 			{
 				subdomains: '1234',
-				maxZoom: 18,
+				maxZoom: 18
 			}
 		);
 	map.doubleClickZoom.disable();
@@ -136,7 +136,7 @@ Transit._leafletMap = function(element, options) {
 		this._layers['radius'] = new L.Circle(latlng, options.radius, { 
 			clickable: false,
 			weight: 1,
-			fillOpacity: 0.1, 
+			fillOpacity: 0.1
 		});
 	}
 
@@ -190,7 +190,7 @@ Transit._leafletMap.prototype.addCallback = function(options) {
 					options.extraParams, 
 					{
 						'lng': e.latlng.lng,
-						'lat': e.latlng.lat,
+						'lat': e.latlng.lat
 					}),
 					function(data) {
 						options.after && options.after(e, data);
@@ -303,5 +303,5 @@ Transit._leafletMap.TransitIcon = L.Icon.extend({
 	shadowUrl: '',
 	iconSize: new L.Point(25, 25),
 	iconAnchor: new L.Point(13, 13),
-	popupAnchor: new L.Point(0, -7),
+	popupAnchor: new L.Point(0, -7)
 });

@@ -3,81 +3,15 @@
 <head>
 <meta http-equiv="content-type" content="text/html; charset=UTF-8">
 <meta name="viewport" content="width=device-width, maximum-scale=1, initial-scale=1, user-scalable=no">
-<!--
-<meta name="apple-mobile-web-app-capable" content="yes">
-<meta name="apple-mobile-web-app-status-bar-style" content="default">
--->
 <title>Transit Near Me</title>
-<link rel="stylesheet" href="http://code.jquery.com/mobile/1.0rc2/jquery.mobile-1.0rc2.min.css">
+<link rel="stylesheet" href="http://code.jquery.com/mobile/1.0/jquery.mobile-1.0.min.css">
 <link rel="stylesheet" href="{{ STATIC_URL }}leaflet.css" />
-<style type="text/css">
-html, body { height: 100%; width: 100%; padding: 0; margin: 0; }
-.page, .content { padding: 0; margin: 0; height: 100%; }
-#map { padding: 0; margin: 0; height: 100%; width: 100%; }
-.ui-dialog .ui-header { margin-top: 15px; }
-.leaflet-popup-content { color: black; text-shadow: none; }
-</style>
 <!--[if lte IE 8]><link rel="stylesheet" href="{{ STATIC_URL }}leaflet.ie.css" /><![endif]-->
-</head>
+<link rel="stylesheet" href="{{ STATIC_URL }}tnm.css" />
 <script src="http://code.jquery.com/jquery-1.6.4.min.js"></script>
-<script src="http://code.jquery.com/mobile/1.0rc2/jquery.mobile-1.0rc2.min.js"></script>
+<script src="http://code.jquery.com/mobile/1.0/jquery.mobile-1.0.min.js"></script>
 <script src="{{ STATIC_URL }}leaflet.js"></script>
-<script src="{{ STATIC_URL }}transit.js"></script>
-<script type="text/javascript">
-$(function() {
-	var mapElementName = 'map',
-		getRadius = function()  { 
-			return $('input:radio[name=radius-button]:checked').val(); 
-		},
-		map = Transit.addMap(
-			'Leaflet', 
-			mapElementName,
-			{ 
-				'lat': 38.89706, 
-				'lng': -77.07092, 
-				'radius': getRadius() });
-
-    map.addCallback({
-        types: ['dblclick'],
-        before: function(e) {
-            map.center(e.latlng);
-        }
-    });
-
-	map.addCallback({
-		types: ['center'],
-		apiCall: Transit.API.getNearby,
-		extraParams: { 'radius_m': getRadius },
-		before: function(e) {
-			map.radius(e.latlng, getRadius());
-            map.overlay('nearby');
-			$.mobile.showPageLoadingMsg();
-		},
-		after: function(e, data) {
-			map.radius(e.latlng, getRadius());
-			map.overlay('nearby', data);
-			$(window).resize();
-			$.mobile.hidePageLoadingMsg();
-		}
-	});	
-	
-	$('#options').live('pagehide', function(e) {
-		map.center();
-	});
-
-	$(window).bind("orientationchange resize pageshow", function() {
-		scroll(0, 0);
-		var viewport_height = window.innerHeight,
-			header = $(".header:visible"),
-			content = $(".content:visible");
-		content.height(viewport_height - header.outerHeight());
-	});
-	
-	Transit.tryGeolocating(
-		function(latlng) { map.center(latlng); },
-		function(error) { map.center(); });
-});
-</script>
+<script src="{{ STATIC_URL }}tnm.js"></script>
 </head>
 
 <body>

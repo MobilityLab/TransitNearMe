@@ -5,3 +5,4 @@ django-stringfield==0.2.1
 psycopg2==2.4.2
 geojson==1.0.1
 GPolyEncode==0.1.1
+closure=20110811
