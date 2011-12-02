@@ -1,5 +1,5 @@
 from optparse import make_option
-from django.db import connection
+from django.db import connection, transaction
 from django.core.management.base import BaseCommand, CommandError
 
 from api.models import *
@@ -112,6 +112,8 @@ class Command(BaseCommand):
                         dataset=dataset)
 
                     try: 
+                        sid = transaction.savepoint()
+
                         # Cut the path at the origin stop, unless the trip
                         # starts and ends at the same stop.
                         if (stop_order == 0) and (stop_ids[0] == stop_ids[-1]):
@@ -123,8 +125,11 @@ class Command(BaseCommand):
                             segment_subset, created = RouteSegment.objects.get_or_create(
                                 dataset=dataset,
                                 line=trip_geom_subset)
-                    except TypeError:
-                        self.stderr.write("Couldn't create trip geometry subset for route %d, segment %d, stop %d." % (api_route.id, segment.id, stop_id))
+                    
+                        transaction.savepoint_commit(sid)
+                    except:
+                        self.stderr.write("Couldn't create trip geometry subset for route %s, segment %s, stop %s." % (api_route.id, segment.id, stop_id))
+                        transaction.savepoint_rollback(sid)
                         continue
 
                     service, created = ServiceFromStop.objects.get_or_create(
