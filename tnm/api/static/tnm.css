@@ -22,3 +22,22 @@ html, body {
 .leaflet-popup-content { 
     color: black; text-shadow: none; 
 }
+#noscript-padding {
+	padding-top: 25px;
+}
+#noscript-warning {
+	position: fixed;
+	top: 0;
+	left: 0;
+	width: 100%;
+	line-height: 24px;
+	border-bottom: 1px solid #000;
+	text-align: center;
+	z-index: 9999;
+	background-color: #777;
+	color: #fff;
+}
+#noscript-clicky {
+	font-size: 1px;
+	line-height: 1px;
+}
