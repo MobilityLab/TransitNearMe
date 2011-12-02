@@ -267,6 +267,8 @@ Transit._leafletMap.prototype.overlay = function(overlayID, overlay) {
                 color = routes[service.route].color;
             if (!color) {
                 color = '#333333';
+            } else {
+                color = '#' + color;
             }
             for (var j in service.segments) {
                 var segment = service.segments[j],
