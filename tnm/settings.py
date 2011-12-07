@@ -41,7 +41,6 @@ STATICFILES_DIRS = ()
 STATICFILES_FINDERS = (
     'django.contrib.staticfiles.finders.FileSystemFinder',
     'django.contrib.staticfiles.finders.AppDirectoriesFinder',
-#    'django.contrib.staticfiles.finders.DefaultStorageFinder',
 )
 
 
@@ -75,6 +74,7 @@ INSTALLED_APPS = (
     'django.contrib.staticfiles',
     'django.contrib.admin',
     'django.contrib.gis',
+    'pipeline',
     'api',
     'client',
 )
@@ -111,6 +111,29 @@ LOGGING = {
 			'propagage': True,
 		}
 	}
+}
+
+# JS/CSS compression.
+PIPELINE_YUI_BINARY = path(SITE_ROOT, 'bin/yuicompressor')
+PIPELINE_CSS = {
+    'tnm': {
+        'source_filenames': (
+            'leaflet.css',
+            'tnm.css',
+        ),
+        'output_filename': 'tnm-?.css',
+    },
+}
+
+PIPELINE_JS = {
+    'tnm': {
+        'source_filenames': (
+            'leaflet.js',
+            'transit.js',
+            'tnm.js',
+        ),
+        'output_filename': 'tnm-?.js',
+    },
 }
 
 # Import local settings. This is required.

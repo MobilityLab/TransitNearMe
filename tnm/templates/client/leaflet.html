@@ -1,3 +1,4 @@
+{% load compressed %}
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -7,13 +8,11 @@
 <meta name="robots" content="nosnippet,noarchive">
 <title>Transit Near Me</title>
 <link rel="stylesheet" href="http://code.jquery.com/mobile/1.0/jquery.mobile-1.0.min.css">
-<link rel="stylesheet" href="{{ STATIC_URL }}leaflet.css" />
+{% compressed_css 'tnm' %}
 <!--[if lte IE 8]><link rel="stylesheet" href="{{ STATIC_URL }}leaflet.ie.css" /><![endif]-->
-<link rel="stylesheet" href="{{ STATIC_URL }}tnm.css" />
 <script src="http://code.jquery.com/jquery-1.6.4.min.js"></script>
 <script src="http://code.jquery.com/mobile/1.0/jquery.mobile-1.0.min.js"></script>
-<script src="{{ STATIC_URL }}leaflet.js"></script>
-<script src="{{ STATIC_URL }}tnm.js"></script>
+{% compressed_js 'tnm' %}
 <!--[if lte IE 6]><script src="{{ STATIC_URL }}warning.js"></script><script>window.onload=function(){e("{{ STATIC_URL }}images/")}</script><![endif]-->
 </head>
 
