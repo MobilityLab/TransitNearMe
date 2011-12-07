@@ -76,6 +76,7 @@ INSTALLED_APPS = (
     'django.contrib.admin',
     'django.contrib.gis',
     'api',
+    'client',
 )
 
 LOGGING = {

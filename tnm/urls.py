@@ -1,6 +1,5 @@
 from django.conf.urls.defaults import patterns, include, url
 from django.contrib.gis import admin
-from django.views.generic.simple import direct_to_template
 
 admin.autodiscover()
 
@@ -13,6 +12,6 @@ urlpatterns += patterns('',
 )
 
 urlpatterns += patterns('',
-	(r'^$', direct_to_template, {'template': 'leaflet.html'}), 
+	(r'^', include('client.urls')),
 	(r'^api/', include('api.urls')),
 )
