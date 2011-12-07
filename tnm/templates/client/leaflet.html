@@ -23,10 +23,13 @@
 </noscript>
 <div class="page" data-role="page" id="home" data-theme="a">
 
-    <div class="header" data-role="header">
-        <a href="#info" data-role="button" data-rel="dialog" data-transition="pop" data-icon="info" data-iconpos="notext">Info</a>
-        <h1>Transit Near Me</h1>
-        <a href="#options" data-role="button" data-rel="dialog" data-transition="pop" data-icon="gear" data-iconpos="notext">Options</a>
+    <div class="ui-header" data-role="header">
+        <div id="tnm-header">
+            <a href="http://commuterpage.com" target="_blank" id="cp-header" title="CommuterPage.com">CommuterPage.com</a>
+            <h1 class="ui-title">Transit Near Me</h1>
+            <a href="#info" data-role="button" data-rel="dialog" data-transition="pop" data-icon="info" data-iconpos="notext" style="position: absolute; right: 44px; top: .4em;" >Info</a>
+            <a href="#options" data-role="button" data-rel="dialog" data-transition="pop" data-icon="gear" data-iconpos="notext" style="position: absolute; right: 10px; top: .4em;" >Options</a>
+        </div>
     </div>
     <div class="content" data-role="content">
         <div id="map"></div>
@@ -60,9 +63,11 @@
         <div>
             <h2>What is Transit Near Me?</h2>
             <p>Transit Near Me is an online tool that shows you the transit services, like buses and Metro rail, that serve your immediate area (or any other area you choose). Double-click or double-tap in an open area of the map to center your "circle" on that spot, and see all the transit services which stop inside the circle. Zoom out to see all the places those transit services go. Click on an individual stop to see which lines serve it. Click on an individual line to see where it goes.</p>
-            <h2>How do I use it?</h2>
+            <h2>Who created it?</h2>
             <p>Transit Near Me is being developed by the Mobility Lab Tech Transit Initiative, a project in the Washington, DC area to foster collaboration among software developers and create open source tools that help people better understand their transit options.</p>
-            <p> Thanks to open data, where many transit agencies in our region and around the nation make their routes and schedules available to anyone for free, it's possible to build many useful applications that help people get around by transit and other modes. The Mobility Lab is part of Arlington County Commuter Services.</p>
+            <p> Thanks to open data, where many transit agencies in our region and around the nation make their routes and schedules available to anyone for free, it's possible to build many useful applications that help people get around by transit and other modes.</p>
+            <p>The Mobility Lab is part of Arlington County Commuter Services. This and other tools will eventually become part of <a href="http://commuterpage.com" target="_blank">CommuterPage.com</a>, the regional resource for transit and travel information.</p>
+            <a href="http://commuterpage.com" target="_blank" id="cp-logo" title="CommuterPage.com">CommuterPage.com</a>
             <h2>Why don't you add more features?</h2>
             <p>We plan to! In the spirit of open source development, we want to show you what we are working on early in the evolution of this tool. We think this has some very useful features already, and want to give you a chance to try it out. Meanwhile, we're working on a number of additional features to make it even more helpful.</p>
             <p>That shouldn't stop you from telling us your thoughts. We welcome your input on how to improve Transit Near Me in the future, and which features to prioritize most highly. Please send us your feedback at <a href="mailto:contact@transitnearme.com?subject=Feedback%20from%20transitnearme.com">contact@transitnearme.com</a>.</p>
