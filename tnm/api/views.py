@@ -4,6 +4,7 @@ import time
 
 from django.contrib.gis.geos import Point
 from django.contrib.gis.measure import D
+from django.db import connection
 from django.http import Http404, HttpResponse, HttpResponseBadRequest
 from django.views.generic import View
 
@@ -76,30 +77,21 @@ class NearbyStopsView(LocationAPIView):
     
 class NearbyView(LocationAPIView):
     def get_api_result(self, *args, **kwargs):
-        origin = Point(self.lng, self.lat)    
-        services = ServiceFromStop.objects.select_related().filter(stop__location__distance_lte=(
-            origin,
-            D(m=self.radius_m)))
+        origin = Point(self.lng, self.lat, srid=4326)
+        radius = self.radius_m
+        
+        query = 'SELECT api_servicefromstop.stop_id, closest.route_id, closest.destination_id, api_servicefromstop._json as "service_json", api_stop._json as "stop_json", api_route._json as "route_json" FROM (SELECT api_servicefromstop.route_id, api_servicefromstop.destination_id, min(ST_Distance_Sphere(api_stop.location, ST_GeomFromEWKB(%s))) as "mindistance" FROM api_stop INNER JOIN api_servicefromstop ON api_stop.id = api_servicefromstop.stop_id WHERE ST_Distance_Sphere(api_stop.location, ST_GeomFromEWKB(%s)) <= %s AND api_stop.id != api_servicefromstop.destination_id GROUP BY api_servicefromstop.route_id, api_servicefromstop.destination_id) AS closest INNER JOIN api_servicefromstop ON api_servicefromstop.route_id = closest.route_id AND api_servicefromstop.destination_id = closest.destination_id INNER JOIN api_stop ON api_servicefromstop.stop_id = api_stop.id AND ST_Distance_Sphere(api_stop.location, ST_GeomFromEWKB(%s)) = closest.mindistance INNER JOIN api_route ON api_servicefromstop.route_id = api_route.id'
+        args = [origin.ewkb, origin.ewkb, radius, origin.ewkb]
 
-        # Find closest option for each service/destination.
-        services = services.distance(origin, field_name='stop__location')
-        closest_services = {}
-        for service in services:
-            pair = (service.route, service.destination)
-            closest = closest_services.get(pair, None)
-            if not closest or service.distance < closest.distance:
-                closest_services[pair] = service
+        cursor = connection.cursor()
+        cursor.execute(query, args)
 
-        # Collect stops, routes, and services.
-        stops = {}
-        routes = {}
-        for s in closest_services.values():
-            if s.stop.id not in stops:
-                stops[s.stop.id] = json.loads(s.stop._json)
-            if s.route.id not in routes:
-                routes[s.route.id] = json.loads(s.route._json)
-        services = [json.loads(s._json) for s in closest_services.values()]
-
-        return {'stops': stops,
-                'routes': routes,
-                'services': services}
+        data = [dict(zip([c[0] for c in cursor.description], row)) for row in cursor.fetchall()]
+        stops = dict((d['stop_id'], json.loads(d['stop_json'])) for d in data)
+        routes = dict((d['route_id'], json.loads(d['route_json'])) for d in data)
+        services = [json.loads(d['service_json']) for d in data]
+        return {
+            'stops': stops,
+            'routes': routes,
+            'services': services
+        }    
