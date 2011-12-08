@@ -39,13 +39,18 @@ $(function() {
 		map.center();
 	});
 
-	$(window).bind("orientationchange resize pageshow", function() {
-		scroll(0, 0);
+    var do_resize = function() {
 		var viewport_height = window.innerHeight,
 			header = $(".header:visible"),
 			content = $(".content:visible");
 		content.height(viewport_height - header.outerHeight());
-	});
+    };
+
+	$(window).bind("orientationchange", function() {
+        scroll(0, 0);
+        do_resize();
+    });
+    $(window).bind("resize pageshow", do_resize);
 	
 	Transit.tryGeolocating(
 		function(latlng) { map.center(latlng); },
