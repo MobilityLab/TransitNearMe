@@ -21,7 +21,7 @@ class DatasetModel(models.Model):
         abstract = True
 
 class JsonModel(DatasetModel):
-    _json = StringField(null=True)
+    _json = StringField(null=True, editable=False)
 
     class Meta:
         abstract = True    
@@ -38,7 +38,7 @@ class JsonModel(DatasetModel):
         super(JsonModel, self).save(*args, **kwargs)
 
 class GtfsModel(JsonModel):
-    gtfs_id = StringField(blank=True)
+    gtfs_id = StringField(null=True)
 
     class Meta:
         abstract = True
@@ -49,10 +49,38 @@ class Agency(GtfsModel):
     def __unicode__(self):
         return self.name
 
+    class Meta:
+        verbose_name_plural = 'Agencies'
+
+    def save(self, *args, **kwargs):
+        super(Agency, self).save(*args, **kwargs)
+        try:
+            # Regenerate route JSON.
+            for route in self.route_set.iterator():
+                route.save()
+        except:
+            pass
+
 class Stop(GtfsModel):
     name = StringField()
     location = models.PointField()
     objects = models.GeoManager()
+
+    @property
+    def latitude(self):
+        return self.location.y
+
+    @latitude.setter
+    def latitude(self, y):
+        self.location.y = y
+
+    @property
+    def longitude(self):
+        return self.location.x
+
+    @longitude.setter
+    def longitude(self, x):
+        self.location.x = x
 
     def __unicode__(self):
         return self.name

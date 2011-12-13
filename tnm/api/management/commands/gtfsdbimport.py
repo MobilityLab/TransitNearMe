@@ -67,16 +67,21 @@ class Command(BaseCommand):
         cursor = connection.cursor()                
         cursor.execute("SELECT * FROM routes")
         gtfs_routes = dictfetchall(cursor)
-                
+               
+        agencies = Agency.objects.filter(dataset=dataset)
+ 
         for idx, gtfs_route in enumerate(gtfs_routes):
             self.stdout.write("Converting route %d/%d '%s'.\n" % (idx + 1, len(gtfs_routes), gtfs_route['route_short_name']))
+
+            if len(agencies) == 1:
+                agency = agencies[0]
+            else:
+                agency = agencies.get(gtfs_id=gtfs_route['agency_id'])
 
             api_route, created = Route.objects.get_or_create(
                 dataset=dataset,
                 gtfs_id=gtfs_route['route_id'],
-                agency=Agency.objects.get(
-                    gtfs_id=gtfs_route['agency_id'], 
-                    dataset=dataset),
+                agency=agency,
                 short_name=gtfs_route['route_short_name'],
                 long_name=gtfs_route['route_long_name'],
                 route_type=gtfs_route['route_type'],
@@ -95,12 +100,17 @@ class Command(BaseCommand):
 
                 # Read in the geometry for this trip. 
                 cursor.execute("SELECT geom FROM patterns JOIN trips ON patterns.shape_id = trips.shape_id WHERE trips.trip_id = '%s'", [int(trip_ids[0])])
-                trip_geom = cursor.fetchone()[0]
+                geom_result = cursor.fetchone()
+                if geom_result:
+                    trip_geom = geom_result[0]
 
-                segment, created = RouteSegment.objects.get_or_create(
-                    dataset=dataset,
-                    line=trip_geom)
- 
+                    segment, created = RouteSegment.objects.get_or_create(
+                        dataset=dataset,
+                        line=trip_geom)
+                else:
+                    segment = None
+                    segment_subset = None
+
                 # Iterate over each stop in the trip.
                 for stop_order, stop_id in enumerate(stop_ids):
                     # Don't create a service from a stop to itself.
@@ -111,26 +121,27 @@ class Command(BaseCommand):
                         gtfs_id=stop_id,
                         dataset=dataset)
 
-                    try: 
-                        sid = transaction.savepoint()
+                    if segment:
+                        try: 
+                            sid = transaction.savepoint()
 
-                        # Cut the path at the origin stop, unless the trip
-                        # starts and ends at the same stop.
-                        if (stop_order == 0) and (stop_ids[0] == stop_ids[-1]):
-                            segment_subset = segment
-                        else: 
-                            cursor.execute("SELECT ST_Line_Substring(ST_GeomFromEWKT(%s), ST_Line_Locate_Point(ST_GeomFromEWKT(%s), ST_GeomFromEWKT(%s)), 1)", [trip_geom, trip_geom, stop.location.ewkt])
-                            trip_geom_subset = cursor.fetchone()[0]
+                            # Cut the path at the origin stop, unless the trip
+                            # starts and ends at the same stop.
+                            if (stop_order == 0) and (stop_ids[0] == stop_ids[-1]):
+                                segment_subset = segment
+                            else: 
+                                cursor.execute("SELECT ST_Line_Substring(ST_GeomFromEWKT(%s), ST_Line_Locate_Point(ST_GeomFromEWKT(%s), ST_GeomFromEWKT(%s)), 1)", [trip_geom, trip_geom, stop.location.ewkt])
+                                trip_geom_subset = cursor.fetchone()[0]
 
-                            segment_subset, created = RouteSegment.objects.get_or_create(
-                                dataset=dataset,
-                                line=trip_geom_subset)
+                                segment_subset, created = RouteSegment.objects.get_or_create(
+                                    dataset=dataset,
+                                    line=trip_geom_subset)
                     
-                        transaction.savepoint_commit(sid)
-                    except:
-                        self.stderr.write("Couldn't create trip geometry subset for route %s, segment %s, stop %s." % (api_route.id, segment.id, stop_id))
-                        transaction.savepoint_rollback(sid)
-                        continue
+                            transaction.savepoint_commit(sid)
+                        except:
+                            self.stderr.write("Couldn't create trip geometry subset for route %s, segment %s, stop %s." % (api_route.id, segment.id, stop_id))
+                            transaction.savepoint_rollback(sid)
+                            continue
 
                     service, created = ServiceFromStop.objects.get_or_create(
                         dataset=dataset,
@@ -138,7 +149,9 @@ class Command(BaseCommand):
                         route=api_route,
                         destination=destination)
 
-                    service.segments.add(segment_subset)
-                    # Only required to refresh service JSON.
+                    if segment_subset:
+                        service.segments.add(segment_subset)
+                    
+                    # Required to refresh service JSON.
                     service.save()
               
