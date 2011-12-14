@@ -32,9 +32,6 @@ class BaseAPIView(JSONResponseMixin, View):
             if param not in request.GET:
                 return HttpResponseBadRequest('Required parameters: ' + ', '.join(self.required_params))
 
-        if hasattr(self, 'lng') and hasattr(self, 'lat'):       
-            self.origin = Point(self.lng, self.lat)
-        
         # Perform the API call.
         start = time.time()     
         api_result = self.get_api_result(*args, **kwargs)
@@ -70,7 +67,7 @@ class LocationAPIView(BaseAPIView):
 class NearbyStopsView(LocationAPIView):
     def get_api_result(self, *args, **kwargs):
         stops = Stop.objects.filter(location__distance_lte=(
-            Point(self.lng, self.lat),
+            Point(self.lng, self.lat, srid=4326),
             D(m=self.radius_m)))
         
         return [s.json_dict() for s in stops]
