@@ -77,6 +77,7 @@ INSTALLED_APPS = (
     'pipeline',
     'api',
     'client',
+    'transitapis'
 )
 
 LOGGING = {

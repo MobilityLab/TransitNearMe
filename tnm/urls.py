@@ -14,4 +14,5 @@ urlpatterns += patterns('',
 urlpatterns += patterns('',
 	(r'^', include('client.urls')),
 	(r'^api/', include('api.urls')),
+        (r'^', include('transitapis.urls')),
 )

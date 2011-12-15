@@ -1,0 +1,110 @@
+{% load compressed %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta http-equiv="content-type" content="text/html; charset=UTF-8">
+<title>Find predictable stops</title>
+<link rel="stylesheet" href="{{ STATIC_URL }}leaflet.css" />
+<!--[if lte IE 8]><link rel="stylesheet" href="{{ STATIC_URL }}leaflet.ie.css" /><![endif]-->
+<script src="http://code.jquery.com/jquery-1.6.4.min.js"></script>
+<script src="{{ STATIC_URL }}leaflet.js"></script>
+<style type="text/css">
+#map {
+    width: 300px;
+    height: 300px;
+}
+</style>
+<script type="text/javascript">
+$(function() {
+
+var map = new L.Map('map', { touchZoom: false, scrollWheelZoom: false }),
+    tileUrl = 'http://otile{s}.mqcdn.com/tiles/1.0.0/osm/{z}/{x}/{y}.png',
+    tileLayer = new L.TileLayer(tileUrl, { subdomains: '1234', maxZoom: 18 });
+var layers = [];
+
+var buildPredictableUrl = function() {
+    var bounds = map.getBounds(),
+        nwLat = bounds.getNorthWest().lat
+        nwLng = bounds.getNorthWest().lng,
+        seLat = bounds.getSouthEast().lat,
+        seLng = bounds.getSouthEast().lng;
+    
+    return '{% url predictable %}?nwLat=' + nwLat + '&nwLng=' + nwLng + '&seLat=' + seLat + '&seLng=' + seLng;
+};
+
+var buildPredictionsUrl = function(stops) {
+    var ids = [];
+    for (var i in stops) {
+        ids.push(stops[i].id);
+    }
+    return '{% url predictions %}?stops=' + ids.join(',');
+}
+
+map.setView(new L.LatLng(38.89706, -77.07092), 16).addLayer(tileLayer);
+map.on('moveend', function() {
+    var predictableUrl = buildPredictableUrl();
+    $('#predictable-url').attr('href', predictableUrl).html(predictableUrl);
+    $('#predictable-url').trigger('click');
+});
+
+$('#predictable-url').click(function(e) {
+    $('#stops-list').empty();
+    for (var i in layers) {
+        map.removeLayer(layers[i]);
+    }
+    $.getJSON($(this).attr('href'), function(data) {
+        for (var i in data) {
+            var stop = data[i];
+            $('#stops-list').append('<li>' + stop.id + ': ' + stop.name + '</li>');
+            var stop_location = new L.LatLng(stop.lat, stop.lng),
+                marker = new L.Marker(stop_location);
+            layers.push(marker);
+            map.addLayer(marker);
+        }
+        var predictionsUrl = buildPredictionsUrl(data),
+            shortPredictionsUrl = predictionsUrl;
+        if (predictionsUrl.length > 60) {
+            shortPredictionsUrl = predictionsUrl.slice(0, 59) + '...';
+        }
+        $('#predictions-url').attr('href', predictionsUrl).html(shortPredictionsUrl);
+    });
+    return false;
+});
+
+$('#predictions-url').click(function(e) {
+    $('#predictions-result').text('Getting predictions...');
+    $.getJSON($(this).attr('href'), function(data) {
+        var s = '';
+        for (var i in data) {
+            var prediction = data[i];
+            s += prediction['name'] + ': ' + prediction['route'] + ' ' + prediction['destination'] + ' ' + prediction['wait'] + '\n';
+        }
+        $('#predictions-result').text(s);
+    });
+    return false;
+});
+
+map.fire('moveend');
+
+});
+</script>
+</head>
+<body>
+<div style="float:left">
+    <div>1) Scroll map to desired area</div>
+    <div id="map"></div>
+</div>
+<div style="float:left">
+    <div>3) Click to get predictions: (might be slow with many stops)</div>
+    <div><a href="#" id="predictions-url"></a></div>
+    <textarea id="predictions-result" rows="22" cols="70" disabled="true"></textarea>
+</div>
+<div style="clear:both">
+    <div>2) Visible stops:</div>
+    <div><a href="#" id="predictable-url"></a></div>
+    <div id="stops">
+        <ul id="stops-list"></ul>
+    </div>
+</div>
+</body>
+</html>
