@@ -112,8 +112,7 @@ class WMATARail(Base):
                         x=float(station['Lon']),
                         y=float(station['Lat']),
                         srid=4326),                
-                    api_cls='%s.%s' % (self.__module__,
-                                       self.__class__.__name__),
+                    api_id=self.id,
                     api_data=station['Code'])
             stops[name] = stop
 
@@ -239,8 +238,7 @@ class WMATABus(Base):
                     x=float(stop['Lon']),
                     y=float(stop['Lat']),
                     srid=4326),
-                api_cls='%s.%s' % (self.__module__,
-                                   self.__class__.__name__),
+                api_id=self.id,
                 api_data=stop['StopID']))
 
         return stops

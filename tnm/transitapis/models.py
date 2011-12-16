@@ -4,7 +4,7 @@ from stringfield import StringField
 class Stop(models.Model):
     name = StringField(blank=True)
     location = models.PointField()
-    api_cls = StringField()
+    api_id = StringField()
     api_data = StringField(blank=True)
 
     objects = models.GeoManager()

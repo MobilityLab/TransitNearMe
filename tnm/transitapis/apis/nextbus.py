@@ -96,8 +96,7 @@ class NextBus(Base):
                 stops.append(Stop(
                     name=title,
                     location=Point(x=float(lon), y=float(lat), srid=4326),
-                    api_cls='%s.%s' % (self.__module__,
-                                       self.__class__.__name__),
+                    api_id=self.id,
                     api_data=stopId))
 
         return stops
