@@ -77,7 +77,7 @@ class Connexionz(Base):
                 stops.append(Stop(
                     name=name,
                     location=Point(x=float(lon), y=float(lat), srid=4326),
-                    api_id=self.id,
+                    api_name=self.name,
                     api_data=tag))
 
         return stops

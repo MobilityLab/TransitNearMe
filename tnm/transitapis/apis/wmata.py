@@ -7,7 +7,7 @@ from django.contrib.gis.geos import Point
 from transitapis.apis.base import Base
 from transitapis.models import Stop, Prediction
 
-class WMATARail(Base):
+class Metrorail(Base):
     """
     API for getting information about rail service operated by WMATA.
 
@@ -112,7 +112,7 @@ class WMATARail(Base):
                         x=float(station['Lon']),
                         y=float(station['Lat']),
                         srid=4326),                
-                    api_id=self.id,
+                    api_name=self.name,
                     api_data=station['Code'])
             stops[name] = stop
 
@@ -151,7 +151,7 @@ class WMATARail(Base):
 
         return predictions
  
-class WMATABus(Base):
+class Metrobus(Base):
     """
     API for getting information about bus service operated by WMATA.
 
@@ -238,7 +238,7 @@ class WMATABus(Base):
                     x=float(stop['Lon']),
                     y=float(stop['Lat']),
                     srid=4326),
-                api_id=self.id,
+                api_name=self.name,
                 api_data=stop['StopID']))
 
         return stops

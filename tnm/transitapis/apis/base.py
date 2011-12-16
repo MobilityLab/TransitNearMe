@@ -4,8 +4,8 @@ class Base(object):
     __metaclass__ = abc.ABCMeta
     required_options = []
 
-    def __init__(self, id, options={}):
-        self.id = id
+    def __init__(self, name, options={}):
+        self.name = name
         self.options = options
         for option in self.required_options:
             if not option in self.options:

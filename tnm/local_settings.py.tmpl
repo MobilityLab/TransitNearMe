@@ -33,13 +33,12 @@ PIPELINE = not DEBUG
 PIPELINE_AUTO = False
 PIPELINE_VERSION = True
 
-# Transit feeds.
-TRANSIT_API_SOURCES = {
-#   'AgencyName': {
-#       'methods': (
-#           'transitapis.apis.module.ClassName',
-#       ),
-#       'options': {
-#       },
-#   },
-}
+# Transit APIs.
+# See transit.apis.get_apis for examples.
+TRANSIT_APIS = [
+#   (
+#       'Name',
+#       'transitapis.apis.module.ClassName',
+#       { 'option-name': 'option-value', },
+#   ),
+]
