@@ -75,6 +75,7 @@ INSTALLED_APPS = (
     'django.contrib.admin',
     'django.contrib.gis',
     'pipeline',
+    'gtfs',
     'api',
     'client',
     'transitapis'
