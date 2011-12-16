@@ -12,6 +12,14 @@ class Stop(models.Model):
     def __unicode__(self):
         return self.name
 
+    def json_dict(self):
+        return {
+            'name': self.name,
+            'api_name': self.api_name,
+            'lat': self.location.y,
+            'lng': self.location.x,
+        }
+            
 class Prediction(models.Model):
     retrieved = models.DateTimeField()
     stop = models.ForeignKey(Stop)
@@ -21,3 +29,10 @@ class Prediction(models.Model):
 
     def __unicode__(self):
         return '%s %s %s' % (self.route, self.destination, self.wait)
+
+    def json_dict(self):
+        return {
+            'route': self.route,
+            'destination': self.destination,
+            'wait': str(self.wait),
+        }

@@ -1,12 +1,12 @@
 import json
 
-from api.util import CustomJSONEncoder
 from django.conf import settings
 from django.contrib.gis.geos import Point, LinearRing
 from django.http import HttpResponse, HttpResponseBadRequest
+from transitapis.apis import get_apis
 from transitapis.models import Stop
 
-def predictable(request):
+def stops(request):
     nwLat = request.GET.get('nwLat', None)
     nwLng = request.GET.get('nwLng', None)
     seLat = request.GET.get('seLat', None)
@@ -23,14 +23,8 @@ def predictable(request):
     box = LinearRing(nwPoint, nePoint, sePoint, swPoint, nwPoint)
     stops = Stop.objects.filter(location__contained=box)
 
-    stop_data = []
-    for stop in stops:
-        stop_data.append({
-            'id': stop.id,
-            'name': stop.name,
-            'lat': stop.location.y,
-            'lng': stop.location.x});
-    data = json.dumps(stop_data, cls=CustomJSONEncoder)
+    stop_data = dict([(s.id, s.json_dict()) for s in stops])
+    data = json.dumps(stop_data)
     return HttpResponse(data, content_type='application/json') 
 
 def predictions(request):
@@ -38,39 +32,22 @@ def predictions(request):
     if stops_query is None:
         return HttpResponseBadRequest('Missing parameters')
 
-    # Set up API methods.
-    api_methods = {}
-    for k,v in settings.TRANSIT_API_SOURCES.iteritems():
-        api_id = k
-        methods = v.get('methods', {})
-        if not methods:
-            continue
-
-        options = v.get('options', {})
-        for method in methods:
-            parts = method.split('.')
-            cls = __import__('.'.join(parts[:-1]))
-            for part in parts[1:]:
-                cls = getattr(cls, part)
-
-            api_methods[api_id] = cls(id=api_id, options=options)
+    apis = get_apis() 
 
     stop_ids = [int(stop_id) for stop_id in stops_query.split(',')]
     stops = Stop.objects.filter(id__in=stop_ids)
 
-    predictions = []
+    prediction_data = {}
     for stop in stops:
-        api_method = api_methods[stop.api_id]
-        stop_predictions = api_method.get_predictions(stop)
-        for stop_prediction in stop_predictions:
-            predictions.append({
-                'id': stop.id,
-                'name': stop.name,
-                'location': stop.location,
-                'route': stop_prediction.route,
-                'destination': stop_prediction.destination,
-                'wait': str(stop_prediction.wait)
-            })
+        api = apis.get(stop.api_name, None)
+        if not api:
+            continue
+    
+        predictions = api.get_predictions(stop)
+        if not len(predictions):
+            continue
+
+        prediction_data[stop.id] = [p.json_dict() for p in predictions]
         
-    data = json.dumps(predictions, cls=CustomJSONEncoder)
+    data = json.dumps(prediction_data)
     return HttpResponse(data, content_type='application/json')

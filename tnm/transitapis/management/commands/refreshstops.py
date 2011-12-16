@@ -32,7 +32,7 @@ Type 'yes' to continue, or 'no' to cancel: """)
                 raise CommandError("Stop refreshing cancelled.")
 
         apis = get_apis()
-        for api in apis:
+        for api in apis.values():
             self.stdout.write("Calling API '%s'.\n" % api.name)
             
             for k, v in api.options.iteritems():

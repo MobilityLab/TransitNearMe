@@ -1,6 +1,8 @@
 from django.conf.urls.defaults import patterns, url
+from django.views.generic.simple import direct_to_template
 
 urlpatterns = patterns('transitapis.views',
-    url(r'^api/predictable', 'predictable', name='predictable'),
-    url(r'^api/predictions', 'predictions', name='predictions'),
+    (r'^$', direct_to_template, {'template': 'transitapis/predictions.html'}),
+    url(r'^stops', 'stops', name='stops'),
+    url(r'^predictions', 'predictions', name='predictions'),
 )
