@@ -3,6 +3,7 @@ from django.core.management.base import NoArgsCommand, CommandError
 from optparse import make_option
 
 from transitapis.apis import get_apis
+from transitapis.models import Stop
  
 class Command(NoArgsCommand):
     option_list = NoArgsCommand.option_list + (
@@ -30,6 +31,9 @@ Type 'yes' to continue, or 'no' to cancel: """)
 
             if confirm != 'yes':
                 raise CommandError("Stop refreshing cancelled.")
+
+        if not self.dry_run:
+            Stop.objects.all().delete()
 
         apis = get_apis()
         for api in apis.values():
