@@ -16,7 +16,7 @@ class DatasetModel(models.Model):
         abstract = True
 
 class Agency(DatasetModel):
-    agency_id = StringField(null=True)
+    agency_id = StringField(null=True, blank=True)
     agency_name = StringField()
 
     class Meta:
@@ -36,11 +36,11 @@ class Stop(DatasetModel):
 
 class Route(models.Model):
     route_id = StringField()
-    agency = models.ForeignKey(Agency, blank=True, null=True)
+    agency = models.ForeignKey(Agency, null=True, blank=True)
     route_short_name = StringField()
     route_long_name = StringField()
     route_type = StringField()
-    route_color = StringField(null=True)
+    route_color = StringField(null=True, blank=True)
 
     @property
     def name(self):
@@ -53,7 +53,9 @@ class Route(models.Model):
         return '%s (unknown name)' % self.id
     
     def __unicode__(self):
-        return '%s %s' % (self.agency, self.name)
+        if self.agency:
+            return '%s %s' % (self.agency, self.name)
+        return self.name
 
 class Shape(DatasetModel):
     shape_ids = StringField()

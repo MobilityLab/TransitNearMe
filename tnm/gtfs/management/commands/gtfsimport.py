@@ -78,8 +78,11 @@ class Command(BaseCommand):
                 dataset=dataset,
                 agency_id=parts.get('agency_id', None),
                 agency_name=parts['agency_name'])
-            if agency.agency_id:
-                agencies[agency.agency_id] = agency
+
+            if not agency.agency_id and len(agencies) > 0:
+                raise CommandError("Invalid GTFS archive: missing agency_ids.")
+
+            agencies[agency.agency_id] = agency
             
             if not self.dry_run:
                 agency.save()
@@ -130,6 +133,7 @@ class Command(BaseCommand):
         self.stdout.write("\rReading routes...done.\n")
 
         # Read in shapes, if they are specified.
+        shapes = {}
         if 'shapes.txt' in archive_files:
             lines = {}
             for parts, pct in read_lines_from_zipfile(zf, 'shapes.txt'):
@@ -155,7 +159,6 @@ class Command(BaseCommand):
                 linestrings[shape_id] = LineString(lines[shape_id], srid=4326)
                 ewkts[shape_id] = linestrings[shape_id].ewkt
  
-            shapes = {}
             unique_shapes = []
             for i, shape_id in enumerate(linestrings.keys()):
                 pct = 100 * i / len(linestrings)
