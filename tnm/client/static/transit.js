@@ -39,11 +39,11 @@ Transit.getIcon = function() {
         }
 
         if (!icons[routeType]) {
-            switch (routeType) {
-                case 0: filename = '23_bus_inv_thumb.gif'; break;
-                case 1: filename = '25_railtransportation_inv_thumb.gif'; break;
-                case 2: filename = '25_railtransportation_inv_thumb.gif'; break;
-                case 3: filename = '23_bus_inv_thumb.gif'; break;
+            switch (routeType.toString()) {
+                case '0': filename = '23_bus_inv_thumb.gif'; break;
+                case '1': filename = '25_railtransportation_inv_thumb.gif'; break;
+                case '2': filename = '25_railtransportation_inv_thumb.gif'; break;
+                case '3': filename = '23_bus_inv_thumb.gif'; break;
                 default: filename = 'marker.png'; break;
             }
             icons[routeType] = new Transit._leafletMap.TransitIcon('/static/images/' + filename);

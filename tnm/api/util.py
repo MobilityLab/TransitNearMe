@@ -11,6 +11,10 @@ class CustomJSONEncoder(json.JSONEncoder):
             _json = getattr(obj, '_json')
             if _json:
                 return _json
+            else:
+                json_dict = getattr(obj, 'json_dict')
+                if callable(json_dict):
+                    return json_dict()
 
         # Handle special classes.
         if isinstance(obj, Point):
@@ -20,7 +24,7 @@ class CustomJSONEncoder(json.JSONEncoder):
             return encoder.encode(obj.coords)    
         if isinstance(obj, Distance):
             return obj.m
- 
+
         # Try iterating.
         try:
             iterable = iter(obj)

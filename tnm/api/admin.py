@@ -3,8 +3,9 @@ from django.contrib.auth.models import User, Group
 from django.contrib.sites.models import Site
 from django.contrib.gis import admin
 from django.utils.translation import ugettext_lazy as _
-from api.models import Dataset, Agency, Stop
 from stringfield import StringField
+
+from api.models import *
 
 # Remove default User, Group, and Site models
 admin.site.unregister(User)
@@ -16,21 +17,8 @@ formfield_overrides = {
     StringField: {'widget': forms.TextInput(attrs={'size': 100})},
 }
 
-# Dataset model
-class DatasetAdmin(admin.ModelAdmin):
+class NoChangeAdmin(admin.ModelAdmin):
     actions = None
-    readonly_fields = ['name', 'created']
-    formfield_overrides = formfield_overrides
-
-    def has_add_permission(self, request):
-        return False
-
-admin.site.register(Dataset, DatasetAdmin)
-
-# Agency model
-class AgencyAdmin(admin.ModelAdmin):
-    actions = None
-    readonly_fields = ['dataset', 'gtfs_id']
     formfield_overrides = formfield_overrides
 
     def has_add_permission(self, request):
@@ -39,7 +27,33 @@ class AgencyAdmin(admin.ModelAdmin):
     def has_delete_permission(self, request, obj=None):
         return False
     
-admin.site.register(Agency, AgencyAdmin)
+admin.site.register(Agency, NoChangeAdmin)
+
+class RouteAdmin(NoChangeAdmin):
+    list_filter = ['agency']
+
+admin.site.register(Route, RouteAdmin)
+
+class GeoNoChangeAdmin(admin.OSMGeoAdmin):
+    actions = None
+    formfield_overrides = formfield_overrides
+
+    def has_add_permission(self, request):
+        return False
+
+    def has_delete_permission(self, request, obj=None):
+        return False
+
+admin.site.register(RouteSegment, GeoNoChangeAdmin)
+
+class RouteSegmentInline(admin.StackedInline):
+    model = RouteSegment
+
+class ServiceFromStopAdmin(GeoNoChangeAdmin):
+    list_filter = ['route__agency', 'route']
+    readonly_fields = ['segments']
+
+admin.site.register(ServiceFromStop, ServiceFromStopAdmin)
 
 # Stop model
 class StopAdminForm(forms.ModelForm):
@@ -71,7 +85,6 @@ class StopAdminForm(forms.ModelForm):
 class StopAdmin(admin.OSMGeoAdmin):
     form = StopAdminForm
     actions = None
-    readonly_fields = ['dataset', 'gtfs_id']
     formfield_overrides = formfield_overrides
     
     def has_add_permission(self, request):
@@ -81,4 +94,3 @@ class StopAdmin(admin.OSMGeoAdmin):
         return False
 
 admin.site.register(Stop, StopAdmin)
-

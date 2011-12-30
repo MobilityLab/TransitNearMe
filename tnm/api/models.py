@@ -1,26 +1,10 @@
 import json
 
+from api.util import CustomJSONEncoder
 from django.contrib.gis.db import models
-from django.core.urlresolvers import reverse
-from geojson import Feature, Point, LineString
 from stringfield import StringField
 
-from api.util import CustomJSONEncoder
-
-class Dataset(models.Model):
-    name = StringField()
-    created = models.DateTimeField(auto_now_add=True)
-
-    def __unicode__(self):
-        return self.name
-
-class DatasetModel(models.Model):
-    dataset = models.ForeignKey(Dataset)
-
-    class Meta:
-        abstract = True
-
-class JsonModel(DatasetModel):
+class JsonModel(models.Model):
     _json = StringField(null=True, editable=False)
 
     class Meta:
@@ -33,24 +17,18 @@ class JsonModel(DatasetModel):
         try:
             self._json = json.dumps(self.json_dict(),
                                     cls=CustomJSONEncoder)
-        except:
+        except Exception, ex:
             self._json = None    
         super(JsonModel, self).save(*args, **kwargs)
 
-class GtfsModel(JsonModel):
-    gtfs_id = StringField(null=True)
-
-    class Meta:
-        abstract = True
-
-class Agency(GtfsModel):
+class Agency(models.Model):
     name = StringField()
+    
+    class Meta:
+        verbose_name_plural = 'Agencies'
 
     def __unicode__(self):
         return self.name
-
-    class Meta:
-        verbose_name_plural = 'Agencies'
 
     def save(self, *args, **kwargs):
         super(Agency, self).save(*args, **kwargs)
@@ -61,10 +39,13 @@ class Agency(GtfsModel):
         except:
             pass
 
-class Stop(GtfsModel):
+class Stop(models.Model):
     name = StringField()
     location = models.PointField()
     objects = models.GeoManager()
+
+    class Meta:
+        ordering = ['name']
 
     @property
     def latitude(self):
@@ -89,12 +70,12 @@ class Stop(GtfsModel):
         return {'name': self.name,
                 'location': self.location}
 
-class Route(GtfsModel):
+class Route(models.Model):
     agency = models.ForeignKey(Agency)
-    short_name = StringField(null=True)
-    long_name = StringField(null=True)
+    short_name = StringField(null=True, blank=True)
+    long_name = StringField(null=True, blank=True)
     route_type = models.IntegerField()
-    color = StringField(null=True)
+    color = StringField(null=True, blank=True)
 
     @property
     def name(self):
@@ -116,19 +97,22 @@ class Route(GtfsModel):
                 'route_type': self.route_type,
                 'color': self.color}
 
-class RouteSegment(DatasetModel):
+class RouteSegment(models.Model):
     line = models.LineStringField(null=True)
     objects = models.GeoManager()
 
     def __unicode__(self):
         return str(self.id)
 
-class ServiceFromStop(JsonModel):
-    stop = models.ForeignKey(Stop, related_name='service')
+class ServiceFromStop(models.Model):
+    stop = models.ForeignKey(Stop, related_name='services_leaving')
     route = models.ForeignKey(Route)
-    destination = models.ForeignKey(Stop)
+    destination = models.ForeignKey(Stop, related_name='services_finishing')
     segments = models.ManyToManyField(RouteSegment)
     objects = models.GeoManager()
+    
+    class Meta:
+        verbose_name_plural = 'Stop services'
 
     def __unicode__(self):
         return '%s from %s to %s' % (self.route.name, self.stop.name, self.destination.name)
