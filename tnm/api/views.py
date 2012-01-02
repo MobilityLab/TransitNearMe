@@ -76,17 +76,36 @@ class NearbyView(LocationAPIView):
     def get_api_result(self, *args, **kwargs):
         origin = Point(self.lng, self.lat, srid=4326)
         radius = self.radius_m
-        
-        query = 'SELECT api_servicefromstop.stop_id, closest.route_id, closest.destination_id, api_servicefromstop._json as "service_json", api_stop._json as "stop_json", api_route._json as "route_json" FROM (SELECT api_servicefromstop.route_id, api_servicefromstop.destination_id, min(ST_Distance_Sphere(api_stop.location, ST_GeomFromEWKB(%s))) as "mindistance" FROM api_stop INNER JOIN api_servicefromstop ON api_stop.id = api_servicefromstop.stop_id WHERE ST_Distance_Sphere(api_stop.location, ST_GeomFromEWKB(%s)) <= %s AND api_stop.id != api_servicefromstop.destination_id GROUP BY api_servicefromstop.route_id, api_servicefromstop.destination_id) AS closest INNER JOIN api_servicefromstop ON api_servicefromstop.route_id = closest.route_id AND api_servicefromstop.destination_id = closest.destination_id INNER JOIN api_stop ON api_servicefromstop.stop_id = api_stop.id AND ST_Distance_Sphere(api_stop.location, ST_GeomFromEWKB(%s)) = closest.mindistance INNER JOIN api_route ON api_servicefromstop.route_id = api_route.id'
+       
+        query = 'SELECT api_servicefromstop.stop_id, closest.route_id, closest.destination_id, api_servicefromstop.json as "service_json", api_stop.json as "stop_json", api_route.json as "route_json" FROM (SELECT api_servicefromstop.route_id, api_servicefromstop.destination_id, min(ST_Distance_Sphere(api_stop.location, ST_GeomFromEWKB(%s))) as "mindistance" FROM api_stop INNER JOIN api_servicefromstop ON api_stop.id = api_servicefromstop.stop_id WHERE ST_Distance_Sphere(api_stop.location, ST_GeomFromEWKB(%s)) <= %s AND api_stop.id != api_servicefromstop.destination_id GROUP BY api_servicefromstop.route_id, api_servicefromstop.destination_id) AS closest INNER JOIN api_servicefromstop ON api_servicefromstop.route_id = closest.route_id AND api_servicefromstop.destination_id = closest.destination_id INNER JOIN api_stop ON api_servicefromstop.stop_id = api_stop.id AND ST_Distance_Sphere(api_stop.location, ST_GeomFromEWKB(%s)) = closest.mindistance INNER JOIN api_route ON api_servicefromstop.route_id = api_route.id'
         args = [origin.ewkb, origin.ewkb, radius, origin.ewkb]
 
         cursor = connection.cursor()
         cursor.execute(query, args)
 
         data = [dict(zip([c[0] for c in cursor.description], row)) for row in cursor.fetchall()]
-        stops = dict((d['stop_id'], json.loads(d['stop_json'])) for d in data)
-        routes = dict((d['route_id'], json.loads(d['route_json'])) for d in data)
-        services = [json.loads(d['service_json']) for d in data]
+        stops = {}
+        routes = {}
+        services = []
+        for d in data:
+            route_id = d['route_id']
+            route_json = d['route_json']
+            service_json = d['service_json']
+
+            stop_id = d['stop_id']
+            stop_json = d['stop_json']
+            if stop_json:
+                stops[stop_id] = json.loads(stop_json)
+            
+            route_id = d['route_id']
+            route_json = d['route_json']
+            if route_json:
+                routes[route_id] = json.loads(route_json)
+            
+            service_json = d['service_json']
+            if service_json:
+                services.append(json.loads(service_json))
+        
         return {
             'stops': stops,
             'routes': routes,

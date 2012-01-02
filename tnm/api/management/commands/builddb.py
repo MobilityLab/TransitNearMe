@@ -4,6 +4,7 @@ from django.db import connection, transaction
 from optparse import make_option
 
 from api.models import Agency, Stop, Route, RouteSegment, ServiceFromStop
+from api.util import enumerate_verbose as ev
 from gtfs import models as gtfs_models
 from transitapis import models as transitapis_models
 
@@ -22,19 +23,7 @@ class Command(NoArgsCommand):
     help = "Updates TNM database from GTFS and transit APIs."
  
     def enumerate_verbose(self, iterable, msg):
-        reported_pct = -1
-        iterable_list = list(iterable)
-        num = len(iterable_list)
-        for i, item in enumerate(iterable_list):
-            pct = 100 * i / num
-            if pct > reported_pct:
-                self.stdout.write("\r%s...%s%%" % (msg, pct))
-                self.stdout.flush()
-                reported_pct = pct
-
-            yield item
-
-        self.stdout.write("\r%s...done.\n" % msg)
+        ev(iterable, msg, stream=self.stdout)
 
     #@transaction.commit_on_success
     def handle_noargs(self, **options):
@@ -108,31 +97,22 @@ Type 'yes' to continue, or 'no' to cancel: """)
 
         # Process GTFS patterns.
         cursor = connection.cursor()
-        for gtfs_stop, stop in self.enumerate_verbose(
-            stops.iteritems(),
+        for gtfs_pattern in self.enumerate_verbose(
+            gtfs_models.Pattern.objects.all(),
             "Processing patterns"):
 
-            gtfs_patterns = gtfs_models.Pattern.objects.filter(stops=gtfs_stop).distinct()
+            gtfs_pattern_stops = gtfs_pattern.patternstop_set.order_by('order')
+            num_pattern_stops = len(gtfs_pattern_stops)
+            last_stop = stops[gtfs_pattern_stops[num_pattern_stops-1].stop]
 
-            for gtfs_pattern in gtfs_patterns:
-                
-                gtfs_pattern_stops = gtfs_pattern.patternstop_set.order_by('order')
-                
-                # Take the subset of stops starting from gtfs_stop.
-                # Stops may appear twice, say in the case of a loop route.
-                # In those cases, use the first appearance of the stop.
-                for gps_index, gps_stop in enumerate(gtfs_pattern_stops):
-                    if gps_stop.stop == gtfs_stop:
-                        break
+            for pattern_index, pattern_stop in enumerate(gtfs_pattern_stops):
 
-                gtfs_pattern_stops = gtfs_pattern_stops[gps_index:]
-
-                num_stops = len(gtfs_pattern_stops)
-                last_stop = gtfs_pattern_stops[num_stops-1].stop
-
-                # If this is the last stop, ignore this pattern.
-                if 1 == num_stops:
+                # Skip the last stop since the pattern only goes to itself.
+                if pattern_index == num_pattern_stops - 1:
                     continue
+            
+                gtfs_stop = pattern_stop.stop
+                stop = stops[gtfs_stop]
 
                 # Generate the geometry for this pattern.
                 routesegment = None
@@ -169,16 +149,16 @@ Type 'yes' to continue, or 'no' to cancel: """)
                     service = ServiceFromStop.objects.get(
                         stop=stop,
                         route=routes[gtfs_pattern.route],
-                        destination=stops[last_stop],
+                        destination=last_stop,
                         segments=routesegment)
                 except ServiceFromStop.DoesNotExist:
                     service = ServiceFromStop(
                         stop=stop,
                         route=routes[gtfs_pattern.route],
-                        destination=stops[last_stop])
+                        destination=last_stop)
 
                     if not self.dry_run:
                         service.save()
                         if routesegment:
                             service.segments.add(routesegment)
-                        service.save() # Regenerate JSON.
+

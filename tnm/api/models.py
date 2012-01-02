@@ -5,7 +5,7 @@ from django.contrib.gis.db import models
 from stringfield import StringField
 
 class JsonModel(models.Model):
-    _json = StringField(null=True, editable=False)
+    json = StringField(null=True, blank=True, editable=False)
 
     class Meta:
         abstract = True    
@@ -14,11 +14,12 @@ class JsonModel(models.Model):
         pass
 
     def save(self, *args, **kwargs):
-        try:
-            self._json = json.dumps(self.json_dict(),
-                                    cls=CustomJSONEncoder)
-        except Exception, ex:
-            self._json = None    
+        save_json = kwargs.get('json', False)
+        if 'json' in kwargs:
+            del kwargs['json']
+        if save_json or self.json:
+            self.json = json.dumps(self.json_dict(),
+                                   cls=CustomJSONEncoder)
         super(JsonModel, self).save(*args, **kwargs)
 
 class Agency(models.Model):
@@ -33,13 +34,13 @@ class Agency(models.Model):
     def save(self, *args, **kwargs):
         super(Agency, self).save(*args, **kwargs)
         try:
-            # Regenerate route JSON.
+            # Regenerate route JSON, if it exists.
             for route in self.route_set.iterator():
                 route.save()
         except:
             pass
 
-class Stop(models.Model):
+class Stop(JsonModel):
     name = StringField()
     location = models.PointField()
     objects = models.GeoManager()
@@ -70,7 +71,7 @@ class Stop(models.Model):
         return {'name': self.name,
                 'location': self.location}
 
-class Route(models.Model):
+class Route(JsonModel):
     agency = models.ForeignKey(Agency)
     short_name = StringField(null=True, blank=True)
     long_name = StringField(null=True, blank=True)
@@ -104,7 +105,7 @@ class RouteSegment(models.Model):
     def __unicode__(self):
         return str(self.id)
 
-class ServiceFromStop(models.Model):
+class ServiceFromStop(JsonModel):
     stop = models.ForeignKey(Stop, related_name='services_leaving')
     route = models.ForeignKey(Route)
     destination = models.ForeignKey(Stop, related_name='services_finishing')
@@ -118,8 +119,12 @@ class ServiceFromStop(models.Model):
         return '%s from %s to %s' % (self.route.name, self.stop.name, self.destination.name)
 
     def json_dict(self):
-        return {'stop': self.stop.id,
-                'route': self.route.id,
-                'destination': self.destination.name,
-                'segments': [s.line for s in self.segments.all()]}
+        d = {'stop': self.stop.id,
+             'route': self.route.id,
+             'destination': self.destination.name,
+             'segments': []
+            }
+        if self.id:
+            d['segments'] = [s.line for s in self.segments.all()]
+        return d
 

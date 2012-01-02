@@ -3,6 +3,7 @@ import json
 
 from django.contrib.gis.geos import Point, LineString
 from django.contrib.gis.measure import Distance
+from sys import stdout
 
 class CustomJSONEncoder(json.JSONEncoder):
     def default(self, obj):
@@ -35,3 +36,17 @@ class CustomJSONEncoder(json.JSONEncoder):
 
         return json.JSONEncoder.default(self, obj)
 
+def enumerate_verbose(iterable, msg, stream=stdout):
+    reported_pct = -1
+    iterable_list = list(iterable)
+    num = len(iterable_list)
+    for i, item in enumerate(iterable_list):
+        pct = 100 * i / num
+        if pct > reported_pct:
+            stream.write("\r%s...%s%%" % (msg, pct))
+            stream.flush()
+            reported_pct = pct
+
+        yield item
+
+    stream.write("\r%s...done.\n" % msg)
