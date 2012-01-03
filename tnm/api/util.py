@@ -38,9 +38,13 @@ class CustomJSONEncoder(json.JSONEncoder):
 
 def enumerate_verbose(iterable, msg, stream=stdout):
     reported_pct = -1
-    iterable_list = list(iterable)
-    num = len(iterable_list)
-    for i, item in enumerate(iterable_list):
+    try:
+        num = len(iterable)
+    except TypeError:
+        iterable_list = list(iterable)
+        num = len(iterable_list)
+
+    for i, item in enumerate(iterable):
         pct = 100 * i / num
         if pct > reported_pct:
             stream.write("\r%s...%s%%" % (msg, pct))
