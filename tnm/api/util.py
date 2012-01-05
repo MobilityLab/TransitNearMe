@@ -7,15 +7,12 @@ from sys import stdout
 
 class CustomJSONEncoder(json.JSONEncoder):
     def default(self, obj):
-        # Check if object exposes pre-computed json.
-        if hasattr(obj, '_json'):
-            _json = getattr(obj, '_json')
-            if _json:
-                return _json
-            else:
-                json_dict = getattr(obj, 'json_dict')
-                if callable(json_dict):
-                    return json_dict()
+        # Check if object exposes a JSONable dictionary.
+        if hasattr(obj, 'json_dict'):
+            json_dict = getattr(obj, 'json_dict')
+            if callable(json_dict):
+                return json_dict()
+            return json_dict
 
         # Handle special classes.
         if isinstance(obj, Point):

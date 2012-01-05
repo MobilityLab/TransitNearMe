@@ -8,7 +8,7 @@ from django.db import connection
 from django.http import Http404, HttpResponse, HttpResponseBadRequest
 from django.views.generic import View
 
-from api.models import Stop, ServiceFromStop
+from api.models import ServiceFromStop, Stop, Route, RouteSegment
 from api.util import CustomJSONEncoder
 
 class JSONResponseMixin(object):
@@ -77,37 +77,26 @@ class NearbyView(LocationAPIView):
         origin = Point(self.lng, self.lat, srid=4326)
         radius = self.radius_m
        
-        query = 'SELECT api_servicefromstop.stop_id, closest.route_id, closest.destination_id, api_servicefromstop.json as "service_json", api_stop.json as "stop_json", api_route.json as "route_json" FROM (SELECT api_servicefromstop.route_id, api_servicefromstop.destination_id, min(ST_Distance_Sphere(api_stop.location, ST_GeomFromEWKB(%s))) as "mindistance" FROM api_stop INNER JOIN api_servicefromstop ON api_stop.id = api_servicefromstop.stop_id WHERE ST_Distance_Sphere(api_stop.location, ST_GeomFromEWKB(%s)) <= %s AND api_stop.id != api_servicefromstop.destination_id GROUP BY api_servicefromstop.route_id, api_servicefromstop.destination_id) AS closest INNER JOIN api_servicefromstop ON api_servicefromstop.route_id = closest.route_id AND api_servicefromstop.destination_id = closest.destination_id INNER JOIN api_stop ON api_servicefromstop.stop_id = api_stop.id AND ST_Distance_Sphere(api_stop.location, ST_GeomFromEWKB(%s)) = closest.mindistance INNER JOIN api_route ON api_servicefromstop.route_id = api_route.id'
+        query = 'SELECT sfs.id, sfs.stop_id, sfs.route_id, sfss.routesegment_id FROM (SELECT sfs.route_id, sfs.destination_id, min(ST_Distance_Sphere(api_stop.location, ST_GeomFromEWKB(%s))) as "mindistance" FROM api_stop INNER JOIN api_servicefromstop sfs ON api_stop.id = sfs.stop_id WHERE ST_Distance_Sphere(api_stop.location, ST_GeomFromEWKB(%s)) <= %s AND api_stop.id != sfs.destination_id GROUP BY sfs.route_id, sfs.destination_id) AS closest INNER JOIN api_servicefromstop sfs ON sfs.route_id = closest.route_id AND sfs.destination_id = closest.destination_id INNER JOIN api_stop ON sfs.stop_id = api_stop.id AND ST_Distance_Sphere(api_stop.location, ST_GeomFromEWKB(%s)) = closest.mindistance INNER JOIN api_route ON sfs.route_id = api_route.id INNER JOIN api_servicefromstop_segments sfss ON sfs.id = sfss.servicefromstop_id'
         args = [origin.ewkb, origin.ewkb, radius, origin.ewkb]
 
         cursor = connection.cursor()
         cursor.execute(query, args)
+        data = cursor.fetchall()
 
-        data = [dict(zip([c[0] for c in cursor.description], row)) for row in cursor.fetchall()]
-        stops = {}
-        routes = {}
-        services = []
-        for d in data:
-            route_id = d['route_id']
-            route_json = d['route_json']
-            service_json = d['service_json']
-
-            stop_id = d['stop_id']
-            stop_json = d['stop_json']
-            if stop_json:
-                stops[stop_id] = json.loads(stop_json)
-            
-            route_id = d['route_id']
-            route_json = d['route_json']
-            if route_json:
-                routes[route_id] = json.loads(route_json)
-            
-            service_json = d['service_json']
-            if service_json:
-                services.append(json.loads(service_json))
+        servicefromstop_ids = [row[0] for row in data]
+        stop_ids = [row[1] for row in data]
+        route_ids = [row[2] for row in data]
+        routesegment_ids = [row[3] for row in data]
         
+        services = ServiceFromStop.objects.filter(id__in=servicefromstop_ids)
+        stops = Stop.objects.filter(id__in=stop_ids)
+        routes = Route.objects.filter(id__in=route_ids)
+        routesegments = RouteSegment.objects.filter(id__in=routesegment_ids)
+
         return {
-            'stops': stops,
-            'routes': routes,
-            'services': services
-        }    
+            'services': services,
+            'stops': dict([(s.id, s) for s in stops]),
+            'routes': dict([(r.id, r) for r in routes]),
+            'segments': dict([(rs.id, rs.line_encoded) for rs in routesegments])
+        }

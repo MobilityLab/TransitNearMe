@@ -1,26 +1,8 @@
-import json
+import gpolyencode
 
-from api.util import CustomJSONEncoder
+from base64 import b64encode
 from django.contrib.gis.db import models
 from stringfield import StringField
-
-class JsonModel(models.Model):
-    json = StringField(null=True, blank=True, editable=False)
-
-    class Meta:
-        abstract = True    
-
-    def json_dict(self):
-        pass
-
-    def save(self, *args, **kwargs):
-        save_json = kwargs.get('json', False)
-        if 'json' in kwargs:
-            del kwargs['json']
-        if save_json or self.json:
-            self.json = json.dumps(self.json_dict(),
-                                   cls=CustomJSONEncoder)
-        super(JsonModel, self).save(*args, **kwargs)
 
 class Agency(models.Model):
     name = StringField()
@@ -40,7 +22,7 @@ class Agency(models.Model):
         except:
             pass
 
-class Stop(JsonModel):
+class Stop(models.Model):
     name = StringField()
     location = models.PointField()
     objects = models.GeoManager()
@@ -71,7 +53,7 @@ class Stop(JsonModel):
         return {'name': self.name,
                 'location': self.location}
 
-class Route(JsonModel):
+class Route(models.Model):
     agency = models.ForeignKey(Agency)
     short_name = StringField(null=True, blank=True)
     long_name = StringField(null=True, blank=True)
@@ -99,13 +81,26 @@ class Route(JsonModel):
                 'color': self.color}
 
 class RouteSegment(models.Model):
-    line = models.LineStringField(null=True)
+    line = models.LineStringField()
+    line_encoded = StringField(null=True)
     objects = models.GeoManager()
+
+    def json_dict(self):
+        if self.line_encoded:
+            return {'line': self.line_encoded}
+        else:
+            return {'line': self.line}
 
     def __unicode__(self):
         return str(self.id)
 
-class ServiceFromStop(JsonModel):
+    def save(self, *args, **kwargs):
+        encoder = gpolyencode.GPolyEncoder()
+        self.line_encoded = encoder.encode(self.line.coords)['points']
+        super(RouteSegment, self).save(*args, **kwargs)
+        
+
+class ServiceFromStop(models.Model):
     stop = models.ForeignKey(Stop, related_name='services_leaving')
     route = models.ForeignKey(Route)
     destination = models.ForeignKey(Stop, related_name='services_finishing')
@@ -119,12 +114,13 @@ class ServiceFromStop(JsonModel):
         return '%s from %s to %s' % (self.route.name, self.stop.name, self.destination.name)
 
     def json_dict(self):
-        d = {'stop': self.stop.id,
+        jd = {'stop': self.stop.id,
              'route': self.route.id,
              'destination': self.destination.name,
-             'segments': []
             }
         if self.id:
-            d['segments'] = [s.line for s in self.segments.all()]
-        return d
+            segment_ids = [v['id'] for v in self.segments.values('id')]
+            segment_ids = ','.join([str(s) for s in segment_ids])
+            jd.update({'segments_b64': b64encode(segment_ids)})
+        return jd
 
