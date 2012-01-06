@@ -6,8 +6,6 @@ from optparse import make_option
 
 from api.models import Agency, Stop, Route, RouteSegment, ServiceFromStop
 from api.util import enumerate_verbose as ev
-from gtfs import models as gtfs_models
-from transitapis import models as transitapis_models
 
 class Command(NoArgsCommand):
     option_list = NoArgsCommand.option_list + (
@@ -76,7 +74,8 @@ Type 'yes' to continue, or 'no' to cancel: """)
 
         self.stdout.write("Creating route segments.\n")
         cursor.execute("DROP TABLE IF EXISTS api_temp_segments")
-        cursor.execute("CREATE TEMP TABLE api_temp_segments AS SELECT a.stop_id AS from_stop_id, a.pattern_id, ST_Line_Substring(line, LEAST(a.intersection, b.intersection), GREATEST(a.intersection, b.intersection)) AS line FROM (SELECT stop_id, pattern_id, api_temp_intersections.order, intersection FROM api_temp_intersections) AS a INNER JOIN api_temp_intersections b ON a.pattern_id = b.pattern_id AND a.order = b.order - 1 INNER JOIN gtfs_pattern ON a.pattern_id = gtfs_pattern.id INNER JOIN gtfs_shape ON gtfs_pattern.shape_id = gtfs_shape.id")
+        cursor.execute("CREATE TEMP TABLE api_temp_segments AS SELECT DISTINCT from_stop_id, from_order, c.pattern_id, gtfs_pattern.route_id, ST_Line_Substring(line, LEAST(c.from_intersection, c.to_intersection), GREATEST(c.from_intersection, c.to_intersection)) AS line FROM (SELECT a.stop_id AS from_stop_id, a.order AS from_order, a.pattern_id, a.intersection AS from_intersection, b.intersection AS to_intersection FROM (SELECT stop_id, pattern_id, api_temp_intersections.order, intersection FROM api_temp_intersections) AS a INNER JOIN api_temp_intersections b ON a.pattern_id = b.pattern_id AND a.order = b.order - 1) AS c INNER JOIN gtfs_pattern ON c.pattern_id = gtfs_pattern.id INNER JOIN gtfs_shape ON gtfs_pattern.shape_id = gtfs_shape.id")
+        cursor.execute("CREATE INDEX line_index ON api_temp_segments USING GIST(line)")
 
         cursor.execute("INSERT INTO api_routesegment(line) SELECT DISTINCT line FROM api_temp_segments WHERE GeometryType(line) = 'LINESTRING'")
         transaction.commit_unless_managed()
@@ -89,15 +88,15 @@ Type 'yes' to continue, or 'no' to cancel: """)
         # Create ServiceFromStop objects.
         cursor.execute("INSERT INTO api_servicefromstop(stop_id, route_id, destination_id) SELECT DISTINCT stop_id, route_id, destination_id FROM api_temp_stop_service_patterns")
         transaction.commit_unless_managed()
-           
+        
         # Associate route segments with stop segments.
         # This JOIN can be huge, so do it incrementally.
         route_ids = [v['id'] for v in Route.objects.values('id')]
         for route_id in self.enumerate_verbose(
             route_ids,
             "Associating stop services with route segments"):
-
-            cursor.execute("INSERT INTO api_servicefromstop_segments(servicefromstop_id, routesegment_id) SELECT DISTINCT sfs.id, rs_id FROM (SELECT rs_id, ssp.stop_id, ssp.route_id, ssp.destination_id FROM (SELECT rs.id AS rs_id, gtfs_ps.pattern_id, gtfs_ps.stop_id, gtfs_ps.order AS stop_order FROM api_routesegment rs INNER JOIN api_temp_segments seg ON ST_AsBinary(rs.line) = ST_AsBinary(seg.line) INNER JOIN gtfs_patternstop gtfs_ps ON seg.from_stop_id = gtfs_ps.stop_id) AS x INNER JOIN api_temp_stop_service_patterns ssp ON x.pattern_id = ssp.pattern_id AND x.stop_order >= ssp.stop_order AND ssp.route_id = %s) AS y INNER JOIN api_servicefromstop sfs ON y.stop_id = sfs.stop_id AND y.route_id = sfs.route_id AND y.destination_id = sfs.destination_id", [route_id])
+            
+            cursor.execute("INSERT INTO api_servicefromstop_segments(servicefromstop_id, routesegment_id) SELECT DISTINCT sfs.id, rs_id FROM (SELECT rs_id, ssp.stop_id, ssp.route_id, ssp.destination_id FROM (SELECT rs.id AS rs_id, gtfs_ps.pattern_id, gtfs_ps.stop_id, gtfs_ps.order AS stop_order FROM api_routesegment rs INNER JOIN api_temp_segments seg ON ST_AsBinary(rs.line) = ST_AsBinary(seg.line) INNER JOIN gtfs_patternstop gtfs_ps ON seg.from_stop_id = gtfs_ps.stop_id INNER JOIN gtfs_pattern ON gtfs_pattern.id = gtfs_ps.pattern_id WHERE gtfs_pattern.route_id = seg.route_id) AS x INNER JOIN api_temp_stop_service_patterns ssp ON x.pattern_id = ssp.pattern_id AND x.stop_order >= ssp.stop_order AND ssp.route_id = %s) AS y INNER JOIN api_servicefromstop sfs ON y.stop_id = sfs.stop_id AND y.route_id = sfs.route_id AND y.destination_id = sfs.destination_id", [route_id])
             transaction.commit_unless_managed()
 
         if self.encodelines:

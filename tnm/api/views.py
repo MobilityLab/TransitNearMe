@@ -88,7 +88,7 @@ class NearbyView(LocationAPIView):
         stop_ids = [row[1] for row in data]
         route_ids = [row[2] for row in data]
         routesegment_ids = [row[3] for row in data]
-        
+    
         services = ServiceFromStop.objects.filter(id__in=servicefromstop_ids)
         stops = Stop.objects.filter(id__in=stop_ids)
         routes = Route.objects.filter(id__in=route_ids)
