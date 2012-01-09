@@ -1,1 +1,7 @@
-Transit Near Me.
+## Transit Near Me
+
+For installation instructions, see the wiki at https://github.com/MobilityLab/TransitNearMe/wiki.
+
+To see a running installation (currently Washington, DC area only), visit http://transitnearme.com.
+
+Transit Near Me is open source, released under the MIT License (see LICENSE file).
