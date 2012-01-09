@@ -77,7 +77,7 @@ class NearbyView(LocationAPIView):
         origin = Point(self.lng, self.lat, srid=4326)
         radius = self.radius_m
        
-        query = 'SELECT sfs.id, sfs.stop_id, sfs.route_id, sfss.routesegment_id FROM (SELECT sfs.route_id, sfs.destination_id, min(ST_Distance_Sphere(api_stop.location, ST_GeomFromEWKB(%s))) as "mindistance" FROM api_stop INNER JOIN api_servicefromstop sfs ON api_stop.id = sfs.stop_id WHERE ST_Distance_Sphere(api_stop.location, ST_GeomFromEWKB(%s)) <= %s AND api_stop.id != sfs.destination_id GROUP BY sfs.route_id, sfs.destination_id) AS closest INNER JOIN api_servicefromstop sfs ON sfs.route_id = closest.route_id AND sfs.destination_id = closest.destination_id INNER JOIN api_stop ON sfs.stop_id = api_stop.id AND ST_Distance_Sphere(api_stop.location, ST_GeomFromEWKB(%s)) = closest.mindistance INNER JOIN api_route ON sfs.route_id = api_route.id INNER JOIN api_servicefromstop_segments sfss ON sfs.id = sfss.servicefromstop_id'
+        query = 'SELECT sfs.id, sfs.stop_id, sfs.route_id, sfss.routesegment_id FROM (SELECT sfs.route_id, sfs.destination_id, min(ST_Distance_Sphere(api_stop.location, ST_GeomFromEWKB(%s))) as "mindistance" FROM api_stop INNER JOIN api_servicefromstop sfs ON api_stop.id = sfs.stop_id WHERE ST_Distance_Sphere(api_stop.location, ST_GeomFromEWKB(%s)) <= %s AND api_stop.id != sfs.destination_id GROUP BY sfs.route_id, sfs.destination_id) AS closest INNER JOIN api_servicefromstop sfs ON sfs.route_id = closest.route_id AND sfs.destination_id = closest.destination_id INNER JOIN api_stop ON sfs.stop_id = api_stop.id AND ST_Distance_Sphere(api_stop.location, ST_GeomFromEWKB(%s)) = closest.mindistance INNER JOIN api_route ON sfs.route_id = api_route.id LEFT OUTER JOIN api_servicefromstop_segments sfss ON sfs.id = sfss.servicefromstop_id'
         args = [origin.ewkb, origin.ewkb, radius, origin.ewkb]
 
         cursor = connection.cursor()
@@ -88,7 +88,7 @@ class NearbyView(LocationAPIView):
         stop_ids = [row[1] for row in data]
         route_ids = [row[2] for row in data]
         routesegment_ids = [row[3] for row in data]
-    
+
         services = ServiceFromStop.objects.filter(id__in=servicefromstop_ids)
         stops = Stop.objects.filter(id__in=stop_ids)
         routes = Route.objects.filter(id__in=route_ids)
