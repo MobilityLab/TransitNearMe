@@ -114,7 +114,8 @@ class ServiceFromStop(models.Model):
         return '%s from %s to %s' % (self.route.name, self.stop.name, self.destination.name)
 
     def json_dict(self):
-        jd = {'stop': self.stop.id,
+        jd = {'id': self.id,
+              'stop': self.stop.id,
               'route': self.route.id,
               'destination': self.destination.name,
             }
