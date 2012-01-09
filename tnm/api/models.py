@@ -50,7 +50,8 @@ class Stop(models.Model):
         return self.name
 
     def json_dict(self):
-        return {'name': self.name,
+        return {'id': self.id,
+                'name': self.name,
                 'location': self.location}
 
 class Route(models.Model):
@@ -74,7 +75,8 @@ class Route(models.Model):
         return self.name
 
     def json_dict(self):
-        return {'agency': self.agency.name,
+        return {'id': self.id,
+                'agency': self.agency.name,
                 'short_name': self.short_name,
                 'long_name': self.long_name,
                 'route_type': self.route_type,
@@ -85,14 +87,12 @@ class RouteSegment(models.Model):
     line_encoded = StringField(null=True)
     objects = models.GeoManager()
 
-    def json_dict(self):
-        if self.line_encoded:
-            return {'line': self.line_encoded}
-        else:
-            return {'line': self.line}
-
     def __unicode__(self):
         return str(self.id)
+
+    def json_dict(self):
+        return {'id': self.id,
+                'line_encoded': self.line_encoded}
 
     def save(self, *args, **kwargs):
         encoder = gpolyencode.GPolyEncoder()
@@ -115,12 +115,11 @@ class ServiceFromStop(models.Model):
 
     def json_dict(self):
         jd = {'stop': self.stop.id,
-             'route': self.route.id,
-             'destination': self.destination.name,
+              'route': self.route.id,
+              'destination': self.destination.name,
             }
         if self.id:
             segment_ids = [v['id'] for v in self.segments.values('id')]
-            segment_ids = ','.join([str(s) for s in segment_ids])
-            jd.update({'segments_b64': b64encode(segment_ids)})
+            jd.update({'segments': segment_ids})
         return jd
 

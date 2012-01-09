@@ -96,7 +96,7 @@ class NearbyView(LocationAPIView):
 
         return {
             'services': services,
-            'stops': dict([(s.id, s) for s in stops]),
-            'routes': dict([(r.id, r) for r in routes]),
-            'segments': dict([(rs.id, rs.line_encoded) for rs in routesegments])
+            'stops': stops,
+            'routes': routes,
+            'segments': routesegments
         }
