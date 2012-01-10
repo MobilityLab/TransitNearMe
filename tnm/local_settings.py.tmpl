@@ -1,15 +1,17 @@
 # Copy to local_settings.py and modify as needed.
+# See https://docs.djangoproject.com/en/dev/ref/settings/ for reference.
 
 DEBUG = True
 TEMPLATE_DEBUG = DEBUG
 
 SITE_ID = 1
 
+# Django secret key.
 # Make this unique, and don't share it with anybody.
 # Generate one at http://www.miniwebtool.com/django-secret-key-generator/
 SECRET_KEY = ''
 
-# Database configuration.
+# Django database configuration.
 DATABASES = {
 	'default': {
 		'ENGINE': 'django.contrib.gis.db.backends.postgis',
