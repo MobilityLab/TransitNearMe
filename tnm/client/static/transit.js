@@ -151,13 +151,39 @@ Transit._leafletMap = function(element, options) {
         var src = e.popup._source,
             visibleLayers = {},
             hiddenLayers = [],
-            i, j, layer, stop, service, segment;
+            i, j, layer, stop, service, segment, 
+            prediction, predictions_str;
    
         if (!src._overlayID) {
             return;
         }
  
         if (src.stop) {
+            $.getJSON('/api/stop/' + src.stop.id, function(data) {
+                if (data.predictions) {
+                    if (e.popup) {
+                        predictions_str = '<h2>Wait times</h2>'
+                        predictions_str += '<ul class="tnm-stop-prediction-list">';
+                        for (i in data.predictions) {
+                            prediction = data.predictions[i];
+                            predictions_str += '<li>';
+                            predictions_str += '<div class="tnm-stop-prediction-route">' + prediction.route + ' ' + prediction.destination + '</div>';
+                            predictions_str += '<div class="tnm-stop-prediction-waits"><ul>';
+                            for (j in prediction.waits) {
+                                predictions_str += '<li>' + prediction.waits[j] + '</li>';
+                            }
+                            predictions_str += '</ul></div></li>';
+                        }
+
+                        if (!data.predictions) {
+                            predictions_str += '<li>Wait times unavailable.</li>'
+                        }
+                        predictions_str += '</ul>';
+                        $(e.popup._contentNode).append(predictions_str);
+                    }
+                }
+            });
+
             visibleLayers[src.stop.layer._leaflet_id] = src.stop.layer;
             for (i in src.stop.services) {
                 service = src.stop.services[i];
@@ -310,7 +336,7 @@ Transit._leafletMap.prototype.overlay = function(overlayID, overlay) {
         }
 
         if (num_routes > 1) {
-            popup_content += '<ul>';
+            popup_content += '<ul class="tnm-segment-list">';
         }
         for (j in segment.destinations) {
             route = this.routes[j];
@@ -353,14 +379,15 @@ Transit._leafletMap.prototype.overlay = function(overlayID, overlay) {
 
         var icon = Transit.getIcon(stop.services),
             stop_marker = new L.Marker(stop.location, { icon: icon }),
-            popup_content = '<p>' + stop.name + '</p>',
+            popup_content = '<h1>' + stop.name + '</h1>',
             num_services = 0;
 
         for (j in stop.services) {
             num_services++;
         }
 
-        popup_content += '<ul>';
+        popup_content += '<h2>Services</h2>';
+        popup_content += '<ul class="tnm-stop-service-list">';
         for (j in stop.services) {
             popup_content += '<li>';
             popup_content += stop.services[j].description;

@@ -47,6 +47,12 @@ class Stop(models.Model):
     def longitude(self, x):
         self.location.x = x
 
+    @property
+    def has_predictions(self):
+        if not self.id:
+            return False
+        return len(self.predictions.all()) > 0
+
     def __unicode__(self):
         return self.name
 
@@ -54,9 +60,7 @@ class Stop(models.Model):
         jd = {'id': self.id,
               'name': self.name,
               'location': self.location,
-              'has_predictions': False}
-        if self.id:
-            jd['has_predictions'] = len(self.predictions.all()) > 0
+              'has_predictions': self.has_predictions}
         return jd
 
 class Route(models.Model):

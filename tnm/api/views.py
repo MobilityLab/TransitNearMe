@@ -11,6 +11,8 @@ from django.views.generic import View
 from api.models import ServiceFromStop, Stop, Route, RouteSegment
 from api.util import CustomJSONEncoder
 
+from transitapis.apis import get_apis
+
 class JSONResponseMixin(object):
     def render_to_response(self, content):
         data = json.dumps(content, cls=CustomJSONEncoder)
@@ -55,10 +57,39 @@ class StopView(BaseAPIView):
             stop = Stop.objects.get(pk=int(kwargs['id']))
         except Stop.DoesNotExist:
             raise Http404
-            
-        return {'id': stop.id,
-                'name': stop.name,
-                'location': stop.location}
+        
+        if not stop.has_predictions:
+            return stop
+
+        jd = stop.json_dict()
+        
+        try:
+            apis = get_apis()
+
+            predictions = {}
+            for prediction in stop.predictions.all():
+                api = apis.get(prediction.api_name, None)
+                if not api:
+                    continue
+
+                api_predictions = api.get_predictions(prediction)
+                for api_prediction in api_predictions:
+                    route_dest_pair = (api_prediction.route, api_prediction.destination)
+                    if route_dest_pair not in predictions:
+                        predictions[route_dest_pair] = []
+                    predictions[route_dest_pair] += [api_prediction.wait]
+           
+            if predictions: 
+                jd['predictions'] = [{
+                    'route': k[0],
+                    'destination': k[1],
+                    'waits': v} for (k,v) in predictions.iteritems()]
+                    
+        except Exception as ex:
+            print ex
+            pass
+                
+        return jd
 
 class LocationAPIView(BaseAPIView):
     params = ['lat', 'lng', 'radius_m']
