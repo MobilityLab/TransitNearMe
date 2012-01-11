@@ -112,7 +112,15 @@ html, body {
     margin: 12px;
     background-image:url('images/CommuterPageLogo.png');
     text-indent: -9999px;
-    margin: 0 auto;
+    margin: 10px auto;
+}
+.ui-content p {
+    margin-top: 20px;
+    margin-bottom: 20px;
+}
+.ui-content h2 {
+    font-weight: bold;
+    font-size: 120%;
 }
 .leaflet-popup-content-wrapper {
     background: #111;
