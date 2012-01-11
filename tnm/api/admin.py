@@ -6,6 +6,7 @@ from django.utils.translation import ugettext_lazy as _
 from stringfield import StringField
 
 from api.models import *
+from transitapis.models import Stop as API_Stop
 
 # Remove default User, Group, and Site models
 admin.site.unregister(User)
@@ -81,12 +82,13 @@ class StopAdminForm(forms.ModelForm):
             model.save()
 
         return model
-    
+
 class StopAdmin(admin.OSMGeoAdmin):
     form = StopAdminForm
     actions = None
     formfield_overrides = formfield_overrides
-    
+    list_filter = ['services_leaving__route__agency']   
+ 
     def has_add_permission(self, request):
         return False
     

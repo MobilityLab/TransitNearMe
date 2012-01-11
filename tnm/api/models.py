@@ -25,12 +25,13 @@ class Agency(models.Model):
 class Stop(models.Model):
     name = StringField()
     location = models.PointField()
+    predictions = models.ManyToManyField('transitapis.Stop')
     objects = models.GeoManager()
 
     class Meta:
         ordering = ['name']
 
-    @property
+    @property 
     def latitude(self):
         return self.location.y
 
@@ -50,9 +51,13 @@ class Stop(models.Model):
         return self.name
 
     def json_dict(self):
-        return {'id': self.id,
-                'name': self.name,
-                'location': self.location}
+        jd = {'id': self.id,
+              'name': self.name,
+              'location': self.location,
+              'has_predictions': False}
+        if self.id:
+            jd['has_predictions'] = len(self.predictions.all()) > 0
+        return jd
 
 class Route(models.Model):
     agency = models.ForeignKey(Agency)
@@ -123,4 +128,3 @@ class ServiceFromStop(models.Model):
             segment_ids = [v['id'] for v in self.segments.values('id')]
             jd.update({'segments': segment_ids})
         return jd
-

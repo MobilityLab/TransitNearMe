@@ -1,3 +1,5 @@
+from difflib import SequenceMatcher
+from django.conf import settings
 from django.contrib.gis.geos import LineString, WKBReader
 from django.contrib.gis.measure import D
 from django.core.management.base import NoArgsCommand, CommandError
@@ -6,6 +8,7 @@ from optparse import make_option
 
 from api.models import Agency, Stop, Route, RouteSegment, ServiceFromStop
 from api.util import enumerate_verbose as ev
+from transitapis.models import Stop as APIStop
 
 class Command(NoArgsCommand):
     option_list = NoArgsCommand.option_list + (
@@ -18,6 +21,9 @@ class Command(NoArgsCommand):
         make_option('--encodelines',
             action='store_true', dest='encodelines', default=True,
             help="Convert paths to encoded polylines (default true)."),
+        make_option('--predictionsonly',
+            action='store_true', dest='predictionsonly', default=False,
+            help="Don't rebuild entire database, only reassociate GTFS with real-time transit APIs."),
     )
     help = "Updates TNM database from GTFS and transit APIs."
  
@@ -27,7 +33,14 @@ class Command(NoArgsCommand):
     def handle_noargs(self, **options):
         self.warning = options['warning']
         self.encodelines = options['encodelines']
-        
+        self.predictionsonly = options['predictionsonly']
+       
+        if not self.predictionsonly:
+            self.build_database()
+
+        self.associate_apis()
+
+    def build_database(self):
         # Warn the user about erasing the database.
         if self.warning:
             confirm = raw_input(u"""
@@ -106,3 +119,95 @@ Type 'yes' to continue, or 'no' to cancel: """)
                 
                 segment.save()
 
+
+    def associate_apis(self):
+        # Warn the user about erasing the database.
+        if self.warning and self.predictionsonly:
+            confirm = raw_input(u"""
+Reassociating transit APIs will erase part of the database.
+Are you sure you want to do this?
+
+Type 'yes' to continue, or 'no' to cancel: """)
+
+            if confirm != 'yes':
+                raise CommandError("Database build cancelled.")
+
+        cursor = connection.cursor()
+        
+        self.stdout.write("Cleaning TNM database of API associations.\n")
+        cursor.execute("DELETE FROM api_stop_predictions")
+        transaction.commit_unless_managed() 
+      
+        # Iterate over each API.
+        for api in settings.TRANSIT_APIS:
+
+            # Pull API information from settings file.
+            # Use GTFS information to filter potential matches.
+            api_options = settings.TRANSIT_APIS[api][1]
+            gtfs_agency = api_options['gtfs_agency']
+            gtfs_route_type = api_options['gtfs_route_type']
+
+            stops = APIStop.objects.filter(api_name=api)
+            possible_stops = Stop.objects.filter(
+                services_leaving__route__agency__name=gtfs_agency,
+                services_leaving__route__route_type=gtfs_route_type)
+            possible_stops = possible_stops.distinct()
+ 
+            for stop in self.enumerate_verbose(
+                stops,
+                "Associating stops with %s API" % api):
+                match = None
+            
+                # First filter by rough distance.
+                nearby_stops = possible_stops.filter(location__distance_lte=(
+                    stop.location,
+                    D(m=750)))
+
+                if nearby_stops:
+
+                    # Compute the actual distance.
+                    nearby_stops = nearby_stops.distance(stop.location)
+
+                    # Next filter by "good enough" name match.
+                    # Match on the overlapping portion of the two names.
+                    for nearby_stop in nearby_stops:
+                        score = SequenceMatcher(
+                            None, 
+                            stop.name.lower(), 
+                            nearby_stop.name[:len(stop.name)].lower()).ratio()
+                        nearby_stop.score = score
+
+                    # Use threshold from difflib.get_close_matches.
+                    matching_stops = filter(lambda x: x.score > 0.5, nearby_stops)
+
+                    if not matching_stops:
+                        # If there are no matching stops, check to see if there
+                        # is exactly one stop in very close proximity.
+                        very_close_stops = filter(lambda x: x.distance < D(m=50), nearby_stops)
+                        if 1 == len(very_close_stops):
+                            match = very_close_stops[0]
+                        else: 
+                            # Either there are no stops with similar names nearby,
+                            # or there are multiple stops with similar names nearby.
+                            pass   
+ 
+                    elif 1 == len(matching_stops):
+                        # Exactly one matching stop.
+                        match = matching_stops[0]
+
+                    else:
+                        # Multiple stops that are close and match well in name.
+                        # If there's one that has a very close name match, pick it.
+                        well_matching_stops = filter(lambda x: x.score > 0.9, matching_stops)
+                        if 1 == len(well_matching_stops):
+                            match = well_matching_stops[0]
+                        else:
+                            # Otherwise, just pick the closest one.
+                            sorted_stops = sorted(matching_stops, key=lambda x: x.distance)
+                            match = sorted_stops[0]
+
+                if match:
+                    match.predictions.add(stop)
+
+        stops = Stop.objects.filter(predictions=None)
+        print '%s unmatched out of %s' % (len(stops), len(Stop.objects.all()))
