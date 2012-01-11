@@ -35,10 +35,6 @@ $(function() {
         }
     }); 
     
-    $('#options').live('pagehide', function(e) {
-        map.center();
-    });
-
     var do_resize = function() {
         var viewport_height = window.innerHeight,
             header = $(".header:visible"),
