@@ -100,6 +100,12 @@ LOGGING = {
 			'formatter': 'simple',
 			'filename': path(SITE_ROOT, os.path.join('log', 'api.log'))
 		},
+        'predictions': {
+            'level': 'DEBUG',
+            'class': 'logging.FileHandler',
+            'formatter': 'simple',
+            'filename': path(SITE_ROOT, os.path.join('log', 'predictions.log'))
+        },
     },
     'loggers': {
         'django.request': {
@@ -110,9 +116,14 @@ LOGGING = {
 		'api': {
 			'handlers': ['api'],
 			'level': 'INFO',
-			'propagage': True,
-		}
-	}
+			'propagate': True,
+		},
+	    'predictions': {
+            'handlers': ['predictions'],
+            'level': 'INFO',
+            'propagate': True,
+        },
+    }
 }
 
 # JS/CSS compression.

@@ -65,6 +65,7 @@ class StopView(BaseAPIView):
         
         try:
             apis = get_apis()
+            logger = logging.getLogger('predictions')
 
             predictions = {}
             for prediction in stop.predictions.all():
@@ -74,12 +75,23 @@ class StopView(BaseAPIView):
 
                 api_predictions = api.get_predictions(prediction)
                 for api_prediction in api_predictions:
+                    
+                    logdata = {
+                        'api_name': prediction.api_name,
+                        'stop_id': prediction.id,
+                        'stop_name': prediction.name,
+                        'route': api_prediction.route,
+                        'destination': api_prediction.destination,
+                        'wait': api_prediction.wait
+                    }
+                    logger.info('%(stop_id)s "%(stop_name)s" "%(route)s" "%(destination)s" "%(wait)s"' % logdata) 
+
                     route_dest_pair = (api_prediction.route, api_prediction.destination)
                     if route_dest_pair not in predictions:
                         predictions[route_dest_pair] = []
                     predictions[route_dest_pair] += [api_prediction.wait]
            
-            if predictions: 
+            if predictions:
                 jd['predictions'] = [{
                     'route': k[0],
                     'destination': k[1],
