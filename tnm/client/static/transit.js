@@ -39,11 +39,8 @@ Transit.getIcon = function() {
 
         if (!icons[route_type]) {
             switch (route_type.toString()) {
-                case '0': filename = '23_bus_inv_thumb.gif'; break;
-                case '1': filename = '25_railtransportation_inv_thumb.gif'; break;
-                case '2': filename = '25_railtransportation_inv_thumb.gif'; break;
-                case '3': filename = '23_bus_inv_thumb.gif'; break;
-                default: filename = 'marker.png'; break;
+                // Always use the same circle icon.
+                default: filename = 'circle.png'; break;
             }
             icons[route_type] = new Transit._leafletMap.TransitIcon('/static/images/' + filename);
         }
@@ -424,5 +421,5 @@ Transit._leafletMap.TransitIcon = L.Icon.extend({
     shadowUrl: '',
     iconSize: new L.Point(25, 25),
     iconAnchor: new L.Point(13, 13),
-    popupAnchor: new L.Point(0, -7)
+    popupAnchor: new L.Point(0, 0)
 });
