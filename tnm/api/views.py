@@ -77,14 +77,15 @@ class StopView(BaseAPIView):
                 for api_prediction in api_predictions:
                     
                     logdata = {
+                        'stop_id': stop.id,
                         'api_name': prediction.api_name,
-                        'stop_id': prediction.id,
+                        'api_stop_id': prediction.id,
                         'stop_name': prediction.name,
                         'route': api_prediction.route,
                         'destination': api_prediction.destination,
                         'wait': api_prediction.wait
                     }
-                    logger.info('%(stop_id)s "%(stop_name)s" "%(route)s" "%(destination)s" "%(wait)s"' % logdata) 
+                    logger.info('%(stop_id)s %(api_stop_id)s "%(stop_name)s" "%(route)s" "%(destination)s" "%(wait)s"' % logdata) 
 
                     route_dest_pair = (api_prediction.route, api_prediction.destination)
                     if route_dest_pair not in predictions:
