@@ -9,7 +9,7 @@ from urllib import urlencode
 from urllib2 import urlopen
 
 class Command(BaseCommand):
-    args = 'agency_name shapefile_base [srid]'
+    args = 'shapefile_base agency_name [srid]'
     can_import_settings = False
     help = "Adds or replaces route pattern shapes from ESRI shapefile."
 
