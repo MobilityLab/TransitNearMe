@@ -8,10 +8,12 @@
 <meta name="robots" content="noarchive">
 <title>Transit Near Me</title>
 <link rel="stylesheet" href="http://code.jquery.com/mobile/1.0/jquery.mobile-1.0.min.css">
+<link rel="stylesheet" href="{{ STATIC_URL }}jquery.mobile.simpledialog.min.css" />
 {% compressed_css 'tnm' %}
 <!--[if lte IE 8]><link rel="stylesheet" href="{{ STATIC_URL }}leaflet.ie.css" /><![endif]-->
 <script src="http://code.jquery.com/jquery-1.6.4.min.js"></script>
 <script src="http://code.jquery.com/mobile/1.0/jquery.mobile-1.0.min.js"></script>
+<script src="{{ STATIC_URL }}jquery.mobile.simpledialog.min.js"></script>
 {% compressed_js 'tnm' %}
 <!--[if lte IE 6]><script src="{{ STATIC_URL }}warning.js"></script><script>window.onload=function(){e("{{ STATIC_URL }}images/")}</script><![endif]-->
 </head>
@@ -72,7 +74,7 @@
             <p>We plan to! In the spirit of open source development, we want to show you what we are working on early in the evolution of this tool. We think this has some very useful features already, and want to give you a chance to try it out. Meanwhile, we're working on a number of additional features to make it even more helpful.</p>
             <p>That shouldn't stop you from telling us your thoughts. We welcome your input on how to improve Transit Near Me in the future, and which features to prioritize most highly. Please send us your feedback at <a href="mailto:contact@transitnearme.com?subject=Feedback%20from%20transitnearme.com">contact@transitnearme.com</a>.</p>
             <h2>Anything else I should know?</h2>
-            <p>Transit Near Me maps are powered by <a href="http://leaflet.cloudmade.com" target="_blank">Leaflet</a>. Map data is &copy; <a href="http://www.openstreetmap.org" target="_blank">OpenStreetMap</a> contributors, <a href="http://creativecommons.org/licenses/by-sa/2.0/" target="_blank">CC-BY-SA</a>. Map tiles are courtesy of <a href="http://www.mapquest.com/" target="_blank">MapQuest</a> <img src="http://developer.mapquest.com/content/osm/mq_logo.png" alt="MapQuest"/>.</p>
+            <p>Transit Near Me maps are powered by <a href="http://leaflet.cloudmade.com" target="_blank">Leaflet</a>. Map data is &copy; <a href="http://www.openstreetmap.org" target="_blank">OpenStreetMap</a> contributors, <a href="http://creativecommons.org/licenses/by-sa/2.0/" target="_blank">CC-BY-SA</a>. Map tiles are courtesy of <a href="http://www.mapquest.com/" target="_blank">MapQuest</a> <img src="http://developer.mapquest.com/content/osm/mq_logo.png" alt="MapQuest"/>. <a href="http://dev.jtsage.com/jQM-SimpleDialog/" target="_blank">jQM-SimpleDialog plugin</a> by JTSage, <a href="http://creativecommons.org/licenses/by/3.0" target="_blank">CC-BY</a>.</p>
             <p>For those interested in helping us make Transit Near Me better, the code is available <a href="https://github.com/MobilityLab/TransitNearMe" target="_blank">as open source</a>. We welcome contributions from any interested programmers.</a>
             <p>Transit information provided by Transit Near Me is for planning purposes only, and may not reflect real-time service availability. Please consult with local transit agencies for any service changes and outages, and plan your trips accordingly.</p> 
         </div>
