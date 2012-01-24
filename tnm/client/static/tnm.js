@@ -9,6 +9,9 @@ $(function() {
             'Leaflet', 
             mapElementName,
             { 
+                'url': tnm_tile_server.url,
+                'subdomains': tnm_tile_server.subdomains,
+                'max_zoom': tnm_tile_server.max_zoom,
                 'lat': initialLat, 
                 'lng': initialLng, 
                 'radius': getRadius() });

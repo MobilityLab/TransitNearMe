@@ -114,18 +114,18 @@ Transit.API.getNearby = Transit.API._call(
 Transit._leafletMap = function(element, options) {
     var map = new L.Map(element, { attributionControl: false }),
         latlng = new L.LatLng(options.lat, options.lng),
-        url = 'http://otile{s}.mqcdn.com/tiles/1.0.0/osm/{z}/{x}/{y}.png',
-        mqosm = new L.TileLayer(
+        url = options.url,
+        tiles = new L.TileLayer(
             url,
             {
-                subdomains: '1234',
-                maxZoom: 18
+                subdomains: options.subdomains,
+                maxZoom: options.max_zoom
             });
     map.doubleClickZoom.disable();
-    map.setView(latlng, 15);
-    map.addLayer(mqosm);
+    map.setView(latlng, 14);
+    map.addLayer(tiles);
         
-    this.layers = { 'OSM': mqosm };
+    this.layers = { 'tiles': tiles };
     this.hiddenLayers = {};
        
     this.segments = {};

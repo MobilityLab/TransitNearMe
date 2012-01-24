@@ -44,5 +44,29 @@ TRANSIT_APIS = {
 #    ),
 }
 
+# Client tile server settings.
+# Verify proper licensing/attribution before using.
+TILE_SERVERS = {
+    # MapQuest-OSM (http://developer.mapquest.com/web/products/open/map)
+    'mapquest-osm': {
+        'url': 'http://otile{s}.mqcdn.com/tiles/1.0.0/osm/{z}/{x}/{y}.png',
+        'subdomains': '1234',
+        'max_zoom': 18,
+        'attribution': 'Map data &copy; <a href="http://www.openstreetmap.org" target="_blank">OpenStreetMap</a> contributors, <a href="http://creativecommons.org/licenses/by-sa/2.0/" target="_blank">CC-BY-SA</a>. Tiles courtesy of <a href="http://www.mapquest.com" target="_blank">MapQuest</a> <img src="http://developer.mapquest.com/content/osm/mq_logo.png" alt="MapQuest" />.'  
+    },
+    # CloudMade-OSM (http://developers.cloudmade.com/projects/tiles/documents)
+    'cloudmade-osm': {
+        'url': 'http://{s}.tile.cloudmade.com/%(api_key)s/%(style_id)s/%(tile_size)s/{z}/{x}/{y}.png' % { 
+            'api_key': '',
+            'style_id': 1,
+            'tile_size': 256
+        },
+        'subdomains': 'abc',
+        'max_zoom': 18,
+        'attribution': 'Map data &copy; <a href="http://www.openstreetmap.org" target="_blank">OpenStreetMap</a> contributors, <a href="http://creativecommons.org/licenses/by-sa/2.0/" target="_blank">CC-BY-SA</a>. Map tiles &copy; <a href="http://cloudmade.com" target="_blank">CloudMade</a> - <a href="http://cloudmade.com/terms_conditions">Terms of Use</a>.'
+    }
+}
+TILE_SERVER = TILE_SERVERS['mapquest-osm']
+
 # Transit Near Me configuration parameters
 TNM_COVERAGE_AREA_DISTANCE_THRESHOLD_IN_MILES = 50
