@@ -7,3 +7,4 @@ geojson==1.0.1
 GPolyEncode==0.1.1
 yuicompressor==2.4.6.1
 django-pipeline==1.1.24
+pyshp==1.1.4
