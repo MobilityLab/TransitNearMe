@@ -1,5 +1,7 @@
 $(function() {
     var mapElementName = 'map',
+        initialLat = 38.89514125082739,
+        initialLng = -77.03634738922119,
         getRadius = function()  { 
             return $('input:radio[name=radius-button]:checked').val(); 
         },
@@ -7,8 +9,11 @@ $(function() {
             'Leaflet', 
             mapElementName,
             { 
-                'lat': 38.89706, 
-                'lng': -77.07092, 
+                'url': tnm_tile_server.url,
+                'subdomains': tnm_tile_server.subdomains,
+                'max_zoom': tnm_tile_server.max_zoom,
+                'lat': initialLat, 
+                'lng': initialLng, 
                 'radius': getRadius() });
 
     map.addCallback({
@@ -29,12 +34,54 @@ $(function() {
         },
         after: function(e, data) {
             map.radius(e.latlng, getRadius());
-            map.overlay('nearby', data);
             $(window).resize();
             $.mobile.hidePageLoadingMsg();
+            
+            if (!data.coverage) {
+                $('#home').simpledialog({
+                    'mode': 'bool',
+                    'prompt': 'Sorry, no coverage here.',
+                    'subTitle': 'Transit Near Me is currently only available for the Washington, DC area.',
+                    'useDialogForceFalse': true,
+                    'cleanOnClose': true,
+                    'buttons': {
+                       'Take me there!': {
+                            click: function() {
+                                map.center({ 
+                                    'lat': initialLat,
+                                    'lng': initialLng
+                                });
+                            }
+                        }
+                    }
+                });
+            } else {
+                map.radius(e.latlng, getRadius());
+                map.overlay('nearby', data);
+                $(window).resize();
+                $.mobile.hidePageLoadingMsg();
+                
+                if (!data.stops.length) {
+                    $('#home').simpledialog({
+                        'mode': 'blank',
+                        'forceInput': false,
+                        'fullHTML': '<div id="no-content-notification" class="ui-simpledialog-notification"><p>No transit nearby.</p><p>Try another location or a larger search radius.</p></div>',
+                        'useDialogForceFalse': true,
+                        'cleanOnClose': true,
+                        'animate': false,
+                        'onCreated': function(e) {
+                            setTimeout(function() { 
+                                if ($('#home').data('simpledialog')) {
+                                    $('#home').simpledialog('close');
+                                }
+                            }, 3000);
+                        }
+                    });
+                }
+            }
         }
     }); 
-    
+
     var do_resize = function() {
         var viewport_height = window.innerHeight,
             header = $(".header:visible"),

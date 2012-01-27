@@ -159,3 +159,23 @@ html, body {
 }
 .tnm-stop-service-list {
 }
+.ui-simpledialog-header {
+    margin: 10px;
+    font-weight: bold;
+}
+.ui-simpledialog-subtitle {
+    margin: 20px;
+}
+.ui-simpledialog-notification {
+    margin: 20px;
+    text-align: center;
+}
+.ui-simpledialog-notification p {
+    margin-top: 5px;
+    margin-bottom: 5px;
+}
+.ui-simpledialog-screen-modal {
+    -moz-opacity: 0.3;
+    opacity: .30;
+    filter: alpha(opacity=30);
+}
