@@ -147,7 +147,9 @@ class Metrorail(Base):
                 route=train['Line'],
                 destination=train['DestinationName'],
                 wait=train['Min'])
-            predictions.append(prediction)
+            
+            if prediction.destination.upper() != 'NO PASSENGER':
+	            predictions.append(prediction)
 
         return predictions
  
