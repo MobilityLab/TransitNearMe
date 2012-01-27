@@ -242,6 +242,8 @@ class Command(BaseCommand):
                     for patternstop in patternstops:
                         patternstop.pattern = pattern
                         patternstop.save()
+
+        # Read in PatternStopTime MSC
                 
         self.stdout.write("\rReading trips...done.\n")
 

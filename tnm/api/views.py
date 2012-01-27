@@ -57,8 +57,10 @@ class StopView(BaseAPIView):
             stop = Stop.objects.get(pk=int(kwargs['id']))
         except Stop.DoesNotExist:
             raise Http404
-        
+                
         if not stop.has_predictions:
+            # get time MSC
+            # index into TNM table MSC
             return stop
 
         jd = stop.json_dict()

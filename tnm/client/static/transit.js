@@ -90,6 +90,48 @@ Transit.decodePolyline = function(polyline) {
     return coords;
 }
 
+Transit.getPredictionsStop = function(data) {
+	predictions_str = '<h2>Wait times</h2>'
+	predictions_str += '<ul class="tnm-stop-prediction-list">';
+	for (i in data.predictions) {
+		prediction = data.predictions[i];
+		predictions_str += '<li>';
+		predictions_str += '<div class="tnm-stop-prediction-route">' + prediction.route + ' ' + prediction.destination + '</div>';
+		predictions_str += '<div class="tnm-stop-prediction-waits"><ul>';
+		for (j in prediction.waits) {
+			predictions_str += '<li>' + prediction.waits[j] + '</li>';
+		}
+		predictions_str += '</ul></div></li>';
+	}
+
+	if (!data.predictions) {
+		predictions_str += '<li>Wait times unavailable.</li>'
+	}
+	predictions_str += '</ul>';
+	return predictions_str;
+}
+
+Transit.getPredictionsSegment = function(data) {
+	predictions_str = '<h2>Wait times</h2>'
+	predictions_str += '<ul class="tnm-stop-prediction-list">';
+	for (i in data.predictions) {
+		prediction = data.predictions[i];
+		predictions_str += '<li>';
+		predictions_str += '<div class="tnm-stop-prediction-route">' + prediction.route + ' to ' + prediction.destination + ' from ' + data.name + '</div>';
+		predictions_str += '<div class="tnm-stop-prediction-waits"><ul>';
+		for (j in prediction.waits) {
+			predictions_str += '<li>' + prediction.waits[j] + '</li>';
+		}
+		predictions_str += '</ul></div></li>';
+	}
+
+	if (!data.predictions) {
+		predictions_str += '<li>Wait times unavailable.</li>'
+	}
+	predictions_str += '</ul>';
+	return predictions_str;
+}
+
 // API calls.
 Transit.API = {
     _call: function(urlTmpl) {
@@ -156,31 +198,17 @@ Transit._leafletMap = function(element, options) {
         }
  
         if (src.stop) {
+        	// get predictions for stop
             $.getJSON('/api/stop/' + src.stop.id, function(data) {
                 if (data.predictions) {
                     if (e.popup) {
-                        predictions_str = '<h2>Wait times</h2>'
-                        predictions_str += '<ul class="tnm-stop-prediction-list">';
-                        for (i in data.predictions) {
-                            prediction = data.predictions[i];
-                            predictions_str += '<li>';
-                            predictions_str += '<div class="tnm-stop-prediction-route">' + prediction.route + ' ' + prediction.destination + '</div>';
-                            predictions_str += '<div class="tnm-stop-prediction-waits"><ul>';
-                            for (j in prediction.waits) {
-                                predictions_str += '<li>' + prediction.waits[j] + '</li>';
-                            }
-                            predictions_str += '</ul></div></li>';
-                        }
-
-                        if (!data.predictions) {
-                            predictions_str += '<li>Wait times unavailable.</li>'
-                        }
-                        predictions_str += '</ul>';
+                    	predictions_str = Transit.getPredictionsStop(data)
                         $(e.popup._contentNode).append(predictions_str);
                     }
                 }
             });
 
+			// show stop and associated segments
             visibleLayers[src.stop.layer._leaflet_id] = src.stop.layer;
             for (i in src.stop.services) {
                 service = src.stop.services[i];
@@ -190,16 +218,40 @@ Transit._leafletMap = function(element, options) {
                 }
             } 
         }
+        
         if (src.segment) {
             visibleLayers[src.segment.layer._leaflet_id] = src.segment.layer;
+            
+			var origin_stop_ids = [];
             for (i in src.segment.services) {
                 service = src.segment.services[i];
+
+				// get unique stop_ids
+				if (origin_stop_ids.indexOf(service.stop.id) == -1) {
+					origin_stop_ids.push(service.stop.id);
+				}
+
+	            // show segments and stop                
                 visibleLayers[service.stop.layer._leaflet_id] = service.stop.layer;
                 for (j in service.segments) {
                     segment = service.segments[j];
                     visibleLayers[segment.layer._leaflet_id] = segment.layer;
                 }
             }
+
+        	// get predictions for segment
+			// MSC eventually, will need to check prediction.destination is identical to src.segment.destination
+			for (var i=0; i<origin_stop_ids.length; i++) {
+				var stop_id = origin_stop_ids[i];
+				$.getJSON('/api/stop/' + stop_id, function(data) {
+					if (data.predictions) {
+						if (e.popup) {
+							predictions_str = Transit.getPredictionsSegment(data)
+							$(e.popup._contentNode).append(predictions_str);
+						}
+					}
+				});
+			}	
         }
 
         for (i in this._layers)

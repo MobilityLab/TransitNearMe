@@ -80,3 +80,12 @@ class PatternStop(models.Model):
 
     def __unicode__(self):
         return '%s' % self.stop
+
+class PatternStopTime(models.Model):
+    patternstop = models.ForeignKey(PatternStop)
+    trip_id = StringField()
+    arrival_time = models.DateTimeField()
+    departure_time = models.DateTimeField()
+    
+    def __unicode__(self):
+        return '%s %s %s %s' % (patternstop, trip_id, arrival_time, departure_time)
