@@ -25,6 +25,7 @@ var tnm_tile_server = {
     'max_zoom': {{ tile_server.max_zoom|escapejs }},
     'attribution': '{{ tile_server.attribution|escapejs }}'
 };
+var tnm_geocoder_key = '{{ geocoder_key|default:"" }}';
 </script>
 {% compressed_js 'tnm' %}
 <!--[if lte IE 6]><script src="{{ STATIC_URL }}warning.js"></script><script>window.onload=function(){e("{{ STATIC_URL }}images/")}</script><![endif]-->
@@ -48,6 +49,16 @@ var tnm_tile_server = {
     <div class="content" data-role="content">
         <div id="map"></div>
     </div>
+	<div class="ui-footer" data-role="footer">
+	    <div id="tnm-footer">
+                <form id="footer-form" method="get" action="">
+                <div data-role="fieldcontain">
+                    <input type="search" name="location" id="location-input" placeholder="Enter location to search" />
+	        </div>
+                <a href="#location" id="home-button" data-role="button" data-icon="home" data-iconpos="notext" style="position: absolute; right: 10px; bottom: 11px" >Use GPS location</a>
+                </form>
+            </div>
+	</div>
 </div>
 
 <div data-role="page" id="options">

@@ -16,84 +16,94 @@ article, aside, canvas, details, embed,
 figure, figcaption, footer, header, hgroup, 
 menu, nav, output, ruby, section, summary,
 time, mark, audio, video {
-	margin: 0;
-	padding: 0;
-	border: 0;
-	font-size: 100%;
-	font: inherit;
-	vertical-align: baseline;
+        margin: 0;
+        padding: 0;
+        border: 0;
+        font-size: 100%;
+        font: inherit;
+        vertical-align: baseline;
 }
 /* HTML5 display-role reset for older browsers */
 article, aside, details, figcaption, figure, 
 footer, header, hgroup, menu, nav, section {
-	display: block;
+        display: block;
 }
 body {
-	line-height: 1;
+        line-height: 1;
 }
 ol, ul {
-	list-style: none;
+        list-style: none;
 }
 blockquote, q {
-	quotes: none;
+        quotes: none;
 }
 blockquote:before, blockquote:after,
 q:before, q:after {
-	content: '';
-	content: none;
+        content: '';
+        content: none;
 }
 table {
-	border-collapse: collapse;
-	border-spacing: 0;
+        border-collapse: collapse;
+        border-spacing: 0;
 }
 
 /* TNM CSS */
 html, body { 
     height: 100%; 
-    width: 100%; 
+    width: 100%;
     padding: 0; 
     margin: 0; 
 }
-.page, .content { 
+.page, .content {
     padding: 0; 
     margin: 0; 
-    height: 100%; 
+}
+.content {
+    height: 100%;
 }
 #map { 
     padding: 0; 
     margin: 0; 
     height: 100%;
-    width: 100%; 
+    width: 100%;
 }
 .ui-dialog .ui-header { 
     margin-top: 15px; 
+}
+.ui-footer .ui-field-contain {
+    margin: 0 45px 0 5px;
+    padding: 5px 0;
+    border: none;
 }
 .leaflet-popup-content { 
     color: black; text-shadow: none; 
 }
 #noscript-padding {
-	padding-top: 25px;
+        padding-top: 25px;
 }
 #noscript-warning {
-	position: fixed;
-	top: 0;
-	left: 0;
-	width: 100%;
-	line-height: 24px;
-	border-bottom: 1px solid #000;
-	text-align: center;
-	z-index: 9999;
-	background-color: #777;
-	color: #fff;
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100%;
+        line-height: 24px;
+        border-bottom: 1px solid #000;
+        text-align: center;
+        z-index: 9999;
+        background-color: #777;
+        color: #fff;
 }
 #noscript-clicky {
-	font-size: 1px;
-	line-height: 1px;
+        font-size: 1px;
+        line-height: 1px;
 }
 #tnm-header {
     overflow: hidden;
     width: 100%;
     display: block;
+}
+#tnm-footer {
+    text-align: center;
 }
 #cp-header {
     width: 52px;

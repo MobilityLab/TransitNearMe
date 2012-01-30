@@ -416,6 +416,10 @@ Transit._leafletMap.prototype.radius = function(latlng, radius_m) {
     }
 }
 
+Transit._leafletMap.prototype.redraw = function() {
+	this.map.invalidateSize();
+}
+
 Transit._leafletMap.TransitIcon = L.Icon.extend({
     iconUrl: '',
     shadowUrl: '',

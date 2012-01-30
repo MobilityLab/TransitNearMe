@@ -47,6 +47,7 @@ $(function() {
                     'buttons': {
                        'Take me there!': {
                             click: function() {
+								$('#location-input').val('');
                                 map.center({ 
                                     'lat': initialLat,
                                     'lng': initialLng
@@ -84,9 +85,11 @@ $(function() {
 
     var do_resize = function() {
         var viewport_height = window.innerHeight,
-            header = $(".header:visible"),
-            content = $(".content:visible");
-        content.height(viewport_height - header.outerHeight());
+            header = $(".ui-header:visible"),
+            content = $(".content:visible"),
+	    footer = $(".ui-footer:visible");
+        content.height(viewport_height - header.outerHeight() - footer.outerHeight());
+	map.redraw();
     };
 
     $(window).bind("orientationchange", function() {
@@ -95,7 +98,43 @@ $(function() {
     });
     $(window).bind("resize pageshow", do_resize);
     
-    Transit.tryGeolocating(
-        function(latlng) { map.center(latlng); },
-        function(error) { map.center(); });
+    $('#location-input').bind("blur", function() {
+        scroll(0, 0);
+    });
+
+	
+    $('#footer-form').bind("submit", function() {
+        $.mobile.showPageLoadingMsg();
+        url = 'http://where.yahooapis.com/geocode?q=' + escape($('#location-input').val()) + '&flags=J' + '&appId=' + tnm_geocoder_key;
+        $.ajax({
+            url: url,
+            datatype: 'json',
+            success: function(data) {
+                if (data.ResultSet) {
+					if (!data.ResultSet.Error && data.ResultSet.Results) {
+	                    map.center({
+		                    lat: data.ResultSet.Results[0].latitude,
+			                lng: data.ResultSet.Results[0].longitude
+				        });
+					}
+				}
+            }
+        });
+
+        $('#location-input').blur();
+        return false;
+    });
+
+    var geolocate = function() {
+        Transit.tryGeolocating(
+            function(latlng) { map.center(latlng); },
+            function(error) { map.center(); });
+    }
+
+    $('#home-button').bind("click", function() {
+        geolocate();
+        return false;
+    });
+    geolocate();
+    
 });

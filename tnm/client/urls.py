@@ -8,6 +8,7 @@ urlpatterns = patterns('',
         'template': 'client/leaflet.html',
         'extra_context': { 
             'tile_server': settings.TILE_SERVER,
+			'geocoder_key': settings.TNM_GEOCODER_KEY
         }   
     }),
 )

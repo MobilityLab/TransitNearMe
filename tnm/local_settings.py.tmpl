@@ -69,4 +69,10 @@ TILE_SERVERS = {
 TILE_SERVER = TILE_SERVERS['mapquest-osm']
 
 # Transit Near Me configuration parameters
+
+# How far the nearest stop needs to be for the query to return that there
+# is no nearby transit coverage for a given location.
 TNM_COVERAGE_AREA_DISTANCE_THRESHOLD_IN_MILES = 50
+
+# Geocoder key to use on the client, if needed.
+TNM_GEOCODER_KEY = ''
