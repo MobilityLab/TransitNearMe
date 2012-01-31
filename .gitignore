@@ -9,3 +9,5 @@ lib
 local
 share
 src
+
+tnm/local_settings.py
