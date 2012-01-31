@@ -61,6 +61,14 @@ var tnm_geocoder_key = '{{ geocoder_key|default:"" }}';
 	</div>
 </div>
 
+<script type="text/javascript">
+  if( navigator.userAgent.match(/Mobile/i) && 
+      navigator.userAgent.match(/Safari/i)
+    ) {
+         document.title = "TransitNearMe";
+}
+</script>
+
 <div data-role="page" id="options">
     <div data-role="header">
         <h1>Options</h1>
