@@ -55,7 +55,7 @@ var tnm_geocoder_key = '{{ geocoder_key|default:"" }}';
                 <div data-role="fieldcontain">
                     <input type="search" name="location" id="location-input" placeholder="Enter location to search" />
 	        </div>
-                <a href="#location" id="home-button" data-role="button" data-icon="home" data-iconpos="notext" style="position: absolute; right: 10px; bottom: 11px" >Use GPS location</a>
+                <a href="#location" id="home-button" data-role="button" data-icon="TransitNearMe-location" data-iconpos="notext" style="position: absolute; right: 10px; bottom: 11px" >Use GPS location</a>
                 </form>
             </div>
 	</div>
@@ -105,9 +105,9 @@ var tnm_geocoder_key = '{{ geocoder_key|default:"" }}';
             <p>We plan to! In the spirit of open source development, we want to show you what we are working on early in the evolution of this tool. We think this has some very useful features already, and want to give you a chance to try it out. Meanwhile, we're working on a number of additional features to make it even more helpful.</p>
             <p>That shouldn't stop you from telling us your thoughts. We welcome your input on how to improve Transit Near Me in the future, and which features to prioritize most highly. Please send us your feedback at <a href="mailto:contact@transitnearme.com?subject=Feedback%20from%20transitnearme.com">contact@transitnearme.com</a>.</p>
             <h2>Anything else I should know?</h2>
-            <p>Transit Near Me maps are powered by <a href="http://leaflet.cloudmade.com" target="_blank">Leaflet</a>. {{ tile_server.attribution|safe }} <a href="http://dev.jtsage.com/jQM-SimpleDialog/" target="_blank">jQM-SimpleDialog plugin</a> by JTSage, <a href="http://creativecommons.org/licenses/by/3.0" target="_blank">CC-BY</a>.</p>
             <p>For those interested in helping us make Transit Near Me better, the code is available <a href="https://github.com/MobilityLab/TransitNearMe" target="_blank">as open source</a>. We welcome contributions from any interested programmers.</p>
             <p>Transit information provided by Transit Near Me is for planning purposes only, and may not reflect real-time service availability. Please consult with local transit agencies for any service changes and outages, and plan your trips accordingly.</p> 
+            <p>Transit Near Me maps are powered by <a href="http://leaflet.cloudmade.com" target="_blank">Leaflet</a>. {{ tile_server.attribution|safe }} <a href="http://dev.jtsage.com/jQM-SimpleDialog/" target="_blank">jQM-SimpleDialog plugin</a> by JTSage, <a href="http://creativecommons.org/licenses/by/3.0" target="_blank">CC-BY</a>. Some icons by <a href="http://glyphish.com/">Glyphish</a>.</p>
         </div>
         <p><a href="#home" data-rel="back" data-role="button" data-inline="true" data-icon="back">Back</a>
     </div>

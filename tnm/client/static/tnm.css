@@ -124,6 +124,9 @@ html, body {
     text-indent: -9999px;
     margin: 10px auto;
 }
+.ui-icon-TransitNearMe-location {
+	background-image: url("images/74-location.png");
+}
 .ui-content p {
     margin-top: 20px;
     margin-bottom: 20px;
