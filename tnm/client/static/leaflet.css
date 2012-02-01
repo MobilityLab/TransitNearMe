@@ -230,8 +230,8 @@ a.leaflet-active {
 	top: 9px;
 	right: 9px;
 	
-	width: 10px;
-	height: 10px;
+	width: 20px;
+	height: 20px;
 	
 	overflow: hidden;
 	}
@@ -269,5 +269,5 @@ a.leaflet-active {
 	font: 12px/1.4 "Helvetica Neue", Arial, Helvetica, sans-serif;
 	}
 .leaflet-popup-close-button {
-	background: white url(images/popup-close.png);
+	background: white url(images/Popup-Close-20px.png);
 	}
