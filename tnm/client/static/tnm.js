@@ -108,6 +108,12 @@ $(function() {
         $.ajax({
             url: url,
             datatype: 'json',
+            beforeSend: function(xhr){
+				if (xhr.overrideMimeType)
+				{
+				  xhr.overrideMimeType("application/json");
+				}
+			  },
             success: function(data) {
                 if (data.ResultSet) {
 					if (!data.ResultSet.Error && data.ResultSet.Results) {
