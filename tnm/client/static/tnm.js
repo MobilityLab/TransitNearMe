@@ -47,7 +47,6 @@ $(function() {
                     'buttons': {
                        'Take me there!': {
                             click: function() {
-								$('#location-input').val('');
                                 map.center({ 
                                     'lat': initialLat,
                                     'lng': initialLng
