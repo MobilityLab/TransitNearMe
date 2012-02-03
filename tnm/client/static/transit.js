@@ -398,12 +398,25 @@ Transit._leafletMap.prototype.overlay = function(overlayID, overlay) {
         stop.layer = stop_marker;
         layers.addLayer(stop_marker);
     }
+    
+    // Build current location marker
+	if (Transit.current && Transit.current.set) {
+		var icon = new Transit._leafletMap.CurrentIcon(),	
+			current_marker = new L.Marker(Transit.current.location, {icon : icon}),
+			popup_content = '<h3><br>Current<br>location</h3>';
+		current_marker.bindPopup(popup_content);
+		layers.addLayer(current_marker);    
+	}
 
     oldLayer && this.map.removeLayer(oldLayer);
     this.layers[overlayID] = layers;
     this.hiddenLayers[overlayID] = [];
     this.map.addLayer(layers);
 }
+
+Transit.current = new Object();
+Transit.current.set = false;
+Transit.current.location = new L.LatLng(0, 0);
 
 Transit._leafletMap.prototype.radius = function(latlng, radius_m) {
     var radius = this.layers['radius'];    
@@ -424,6 +437,14 @@ Transit._leafletMap.TransitIcon = L.Icon.extend({
     iconUrl: '',
     shadowUrl: '',
     iconSize: new L.Point(25, 25),
+    iconAnchor: new L.Point(13, 13),
+    popupAnchor: new L.Point(0, 0)
+});
+
+Transit._leafletMap.CurrentIcon = L.Icon.extend({
+    iconUrl: '/static/images/ledlightblue_16px.png',
+    shadowUrl: '',
+    iconSize: new L.Point(16, 16),
     iconAnchor: new L.Point(13, 13),
     popupAnchor: new L.Point(0, 0)
 });

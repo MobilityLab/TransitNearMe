@@ -135,7 +135,11 @@ $(function() {
 
     var geolocate = function() {
         Transit.tryGeolocating(
-            function(latlng) { map.center(latlng); },
+            function(latlng) { 
+            	Transit.current.set = true;
+				Transit.current.location = latlng;
+            	map.center(latlng);
+            },
             function(error) { map.center(); });
     }
 
