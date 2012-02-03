@@ -117,6 +117,9 @@ $(function() {
             success: function(data) {
                 if (data.ResultSet) {
 					if (!data.ResultSet.Error && data.ResultSet.Results) {
+						if (data.ResultSet.Results[0].quality < 80) {
+							$('#location-input').val($('#location-input').val() + ' (Approximate)');
+						}
 	                    map.center({
 		                    lat: data.ResultSet.Results[0].latitude,
 			                lng: data.ResultSet.Results[0].longitude
