@@ -82,18 +82,21 @@ map.fire('moveend');
 </script>
 </head>
 <body>
-<div>
-    <div>1) Scroll map to desired area</div>
-    <div id="map" style="width: 600px; height: 300px;"></div>
+<div id="container" style="width:1000px">
+    <div>
+        <div>1) Scroll map to desired area</div>
+        <div id="map" style="width: 600px; height: 600px; float:left;"></div>
+    </div>
+    <div style="width: 370px; float:right;">
+        <div>2) Visible stops:</div>
+        <div><a href="#" id="predictable-url"></a></div>
+        <textarea id="stops" rows="16" cols="80" readonly="readonly"></textarea>
+    </div>
+    <div style="width: 370px; float:right;">
+        <div>3) Click to get predictions: (might be slow with many stops)</div>
+        <div><a href="#" id="predictions-url"></a></div>
+        <textarea id="predictions-result" rows="10" cols="80" readonly="readonly"></textarea>
+    </div>
 </div>
-<div>
-    <div>2) Visible stops:</div>
-    <div><a href="#" id="predictable-url"></a></div>
-    <textarea id="stops" rows="10" cols="80" disabled="disabled"></textarea>
-</div>
-<div>
-    <div>3) Click to get predictions: (might be slow with many stops)</div>
-    <div><a href="#" id="predictions-url"></a></div>
-    <textarea id="predictions-result" rows="10" cols="80" disabled="disabled"></textarea>
 </body>
 </html>
