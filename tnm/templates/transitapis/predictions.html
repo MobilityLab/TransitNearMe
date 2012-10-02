@@ -12,9 +12,9 @@
 <script type="text/javascript">
 $(function() {
 
-var map = new L.Map('map', { touchZoom: false, scrollWheelZoom: false }),
+var map = new L.Map('map', { touchZoom: true, scrollWheelZoom: true }),
     tileUrl = 'http://otile{s}.mqcdn.com/tiles/1.0.0/osm/{z}/{x}/{y}.png',
-    tileLayer = new L.TileLayer(tileUrl, { subdomains: '1234', maxZoom: 18 });
+    tileLayer = new L.TileLayer(tileUrl, { subdomains: '1234', maxZoom: 22 });
 var layers = [];
 
 var buildPredictableUrl = function() {
