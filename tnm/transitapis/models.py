@@ -18,6 +18,7 @@ class Stop(models.Model):
             'api_name': self.api_name,
             'lat': self.location.y,
             'lng': self.location.x,
+            'code': self.api_data,
         }
             
 class Prediction(models.Model):
