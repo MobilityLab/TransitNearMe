@@ -18,8 +18,9 @@ class Stop(models.Model):
             'api_name': self.api_name,
             'lat': self.location.y,
             'lng': self.location.x,
-            'code': self.api_data,
+            'code': self.api_name.lower().replace(' ','-') + ':' + self.api_data, # normalize to lower case without spaces
         }
+
             
 class Prediction(models.Model):
     retrieved = models.DateTimeField()
