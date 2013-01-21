@@ -1,4 +1,8 @@
-## Transit Near Me
+# Transit Near Me: a project from the Mobility Lab
+
+![Example Transit Screen](http://images.greatergreaterwashington.org/images/201112/tnm.png)
+
+## Introduction
 
 Transit Near Me tries to help people learn about nearby transit services that they might not be aware of
 in a simple and easy way. It visualizes them as an interactive "spider map" of direct services from your location. 
@@ -6,6 +10,8 @@ in a simple and easy way. It visualizes them as an interactive "spider map" of d
 To see a running installation (greater Washington, DC services only) visit http://transitnearme.com/.
 
 Transit Near me is web application, and runs on desktop computers and mobile devices. It has been tested extensively on iPhone. 
+
+## Instructions
 
 The code is written in Python with a Javascript front end using Leaflet for map layers, and MapBox for map tiles. It uses schedule data from GTFS, along with real-time predictions from various real-time APIs including NextBus. 
 
