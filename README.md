@@ -1,6 +1,6 @@
-# Transit Near Me: a project from the Mobility Lab
+# Transit Near Me original: a project from the Mobility Lab
 
-![Example Transit Screen](http://images.greatergreaterwashington.org/images/201112/tnm.png)
+![Example Transit Near Me interface](http://images.greatergreaterwashington.org/images/201112/tnm.png)
 
 ## Introduction
 
@@ -13,7 +13,9 @@ Transit Near me is a web application, and runs on desktop computers and mobile d
 
 ## Instructions
 
-The code is written in Python (Django) with a Javascript front end using Leaflet for map layers, and MapBox for map tiles. It uses schedule data from GTFS, along with real-time predictions from various real-time APIs including NextBus. 
+The code is written in Python using Django.
+The front end is Javascript with Leaflet for map layers, and MapBox for map tiles. 
+Schedule data comes from GTFS, along with real-time predictions from various real-time APIs including NextBus and Connexionz. 
 
 [Background details and instructions for use](http://mobilitylab.org/2011/12/05/transit-near-me-shows-your-transit-choices/)
 
